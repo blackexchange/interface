@@ -1,0 +1,47 @@
+{
+  
+  "name": "hl7serverv1",
+  
+  "version": "1.0.0",
+  
+  "description": "Analisador de Interface HL7",
+  
+  "main": "server.js",
+  
+  "bin": "server.js",
+  
+  "scripts": {
+  
+    
+  "test": "echo \"Error: no test specified\" && exit 1",
+  
+    
+  "start": "node server.js",
+  
+    
+  "compilar": "pkg -t node14-win-x64 ."
+  
+  },
+  
+  "keywords": [],
+  
+  "author": "Rodney Neville - rodneyneville@gmail.com - (71) 98715-8083",
+  
+  "license": "ISC",
+  
+  "dependencies": {
+  
+    
+  "dotenv": "^16.4.5",
+  
+    
+  "mysql": "^2.18.1",
+  
+    
+  "mysql2": "^3.11.0",
+  
+    
+  "ntp-client": "^0.5.3"
+  
+  }
+}

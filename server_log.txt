@@ -1,0 +1,18 @@
+2024-08-03T23:43:21.331Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111333||||QRF|1|O
+-----------------------------------------------
+2024-08-03T23:43:21.334Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240803T23432^S|NO SECURITY|QRY^Q02|20240803T23432|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-03T23:43:21.334Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240803T23432^S|NO SECURITY|QRY^Q02|20240803T23432|T|2.3|000000000611811||AL|MSA|AA|1|Message Accepted|||0|ERR|0|QAK|SR|NF|
+-----------------------------------------------
+2024-08-03T23:47:27.944Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111333||||QRF|1|O
+-----------------------------------------------
+2024-08-03T23:47:27.974Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240803T23472^S|NO SECURITY|QRY^Q02|20240803T23472|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-03T23:47:27.974Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240803T23472^S|NO SECURITY|QRY^Q02|20240803T23472|T|2.3|000000000611811||AL|MSA|AA|1|Message Accepted|||0|ERR|0|QAK|SR|NF|
+-----------------------------------------------
+2024-08-03T23:48:11.748Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-03T23:48:11.753Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240803T23481^S|NO SECURITY|QRY^Q02|20240803T23481|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-03T23:48:11.753Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240803T23481^S|NO SECURITY|QRY^Q02|20240803T23481|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|ODSP|29|ASD||||DSP|30|FFF||||DSP|31|KKK||||DSC||
+-----------------------------------------------
