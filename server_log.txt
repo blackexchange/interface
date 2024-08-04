@@ -16,3 +16,91 @@
 -----------------------------------------------
 2024-08-03T23:48:11.753Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240803T23481^S|NO SECURITY|QRY^Q02|20240803T23481|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|ODSP|29|ASD||||DSP|30|FFF||||DSP|31|KKK||||DSC||
 -----------------------------------------------
+2024-08-04T00:23:12.251Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:23:33.768Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00231^S|NO SECURITY|QRY^Q02|20240804T00231|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:23:33.769Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00231^S|NO SECURITY|QRY^Q02|20240804T00231|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:23:41.742Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:24:01.091Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00234^S|NO SECURITY|QRY^Q02|20240804T00234|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:24:01.091Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00234^S|NO SECURITY|QRY^Q02|20240804T00234|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:27:40.286Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:28:26.949Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00274^S|NO SECURITY|QRY^Q02|20240804T00274|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:28:26.949Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00274^S|NO SECURITY|QRY^Q02|20240804T00274|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:29:03.578Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:29:05.417Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00290^S|NO SECURITY|QRY^Q02|20240804T00290|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:29:05.417Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00290^S|NO SECURITY|QRY^Q02|20240804T00290|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:32:37.817Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:32:40.028Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00323^S|NO SECURITY|QRY^Q02|20240804T00323|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:32:40.029Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00323^S|NO SECURITY|QRY^Q02|20240804T00323|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:32:52.443Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:33:23.264Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00325^S|NO SECURITY|QRY^Q02|20240804T00325|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:33:23.264Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00325^S|NO SECURITY|QRY^Q02|20240804T00325|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:33:25.948Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:33:37.146Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00332^S|NO SECURITY|QRY^Q02|20240804T00332|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:33:37.147Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00332^S|NO SECURITY|QRY^Q02|20240804T00332|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:33:39.436Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:34:35.488Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00333^S|NO SECURITY|QRY^Q02|20240804T00333|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:34:35.488Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00333^S|NO SECURITY|QRY^Q02|20240804T00333|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:35:32.616Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:35:51.642Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00353^S|NO SECURITY|QRY^Q02|20240804T00353|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:35:51.643Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00353^S|NO SECURITY|QRY^Q02|20240804T00353|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:35:54.785Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:36:48.607Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00355^S|NO SECURITY|QRY^Q02|20240804T00355|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:36:48.608Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00355^S|NO SECURITY|QRY^Q02|20240804T00355|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:36:53.036Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:37:02.076Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00365^S|NO SECURITY|QRY^Q02|20240804T00365|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:37:02.077Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00365^S|NO SECURITY|QRY^Q02|20240804T00365|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:37:04.599Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:37:16.977Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00370^S|NO SECURITY|QRY^Q02|20240804T00370|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:37:16.978Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00370^S|NO SECURITY|QRY^Q02|20240804T00370|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:40:03.083Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:40:09.505Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00400^S|NO SECURITY|QRY^Q02|20240804T00400|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:40:09.506Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00400^S|NO SECURITY|QRY^Q02|20240804T00400|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:49:08.981Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|O
+-----------------------------------------------
+2024-08-04T00:49:27.012Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00490^S|NO SECURITY|QRY^Q02|20240804T00490|T|2.3|000000000611811||AL|MSAA|AA|1|Mensagem Aceita||||0|ERR|0|QAK|SR|OK|
+-----------------------------------------------
+2024-08-04T00:49:27.014Z 	LIS 	MSH|^~&|Receiving APP|Receiving APP|SendingAPP|Sender Facility|20240804T00490^S|NO SECURITY|QRY^Q02|20240804T00490|T|2.3|000000000611811||AL|QRD|||||||111||||QRF|1|ODSP|29|BOB||||
+DSP|30|FFF||||
+DSP|31|KKK||||
+DSC||
+
+-----------------------------------------------

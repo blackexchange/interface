@@ -1,5 +1,6 @@
 const net = require('net');
 const fs = require('fs');
+const path = require('path');
 
 const globalState = require('./global');
 
@@ -14,17 +15,28 @@ const db = require('./database');
 
 const port = process.env.LIS_PORT;
 const host = process.env.LIS_IP;
-const equipment = process.env.LIS_ID;
+const equipment = process.env.LIS_ALIAS;
+const fila = process.env.LIS_FILA;
 
 const db_enabled = process.env.DB_ENABLED;
 
-if (db_enabled=='TRUE'){
+if (fila=='TRUE'){
 
     //setInterval(fetchData, 10000);
 }
 
+
+
+
 console.log('==== Analisador de Protocolo HL7 v2.0 By Neville =====' );
 
+if (db_enabled=='TRUE'){
+    getEquipmentData(equipment).then(e=>{
+
+        console.log(e[0] );
+    });
+    
+}
     sistemaValido().then(isValid => {
         if (!isValid) {
             console.log('Aplicação Expirada. Entre em contato com Rodney Neville. rodneyneville@gmail.com');
@@ -161,7 +173,7 @@ async function processHL7Message(socket) {
             console.log("==== QUERY DE AMOSTRA ====");
             responseMessage = `\x0B${responseSegments.join('\x0D')}\x1C\x0D`;
             break;
-            
+
         case 'ORU':
             console.log("==== RESULTADO ====");
             break;
@@ -220,17 +232,22 @@ function processOBXSegment(fields) {
 }
 
 async function processQRDSegment(fields) {
-    const sampleOrders = await getSampleOrders(fields[7]);
 
-    if (sampleOrders.length > 0) {
-        const tests = sampleOrders[0].ord_test;
-        return formatResponse(tests);
+    if (db_enabled=='TRUE'){
+        const sampleOrders = await getSampleOrders(fields[7]);
+
+        if (sampleOrders.length > 0) {
+            const tests = sampleOrders[0].ord_test;
+            return formatResponse(tests);
+        }else{
+            return "";
+        
+    
+        }
     }else{
-        return "";
-    
-
+        return await getOrderFile();
     }
-    
+   
     
 }
 
@@ -319,8 +336,42 @@ async function getSampleOrders(sample) {
     }
 }
 
-function getHL7Field(message,number){
-    const segments = message.split('|'); 
-    return segments[number];
+async function getEquipmentData(equipment) {
+    try {
+        // Executar a consulta usando o pool; não é necessário chamar db.connect() ou db.close()
+        const results = await db.query(`SELECT * FROM eqp WHERE eqp_alias="${equipment}"`);
+        console.log('Obtendo dados do equipamento...');
+        return results;
+
+    } catch (error) {
+        console.error('Erro ao executar a consulta:', error);
+    }
+}
+
+function readFileSync(filePath) {
+    try {
+        // Lê o arquivo de forma síncrona
+        const data = fs.readFileSync(filePath, 'utf8');
+        console.log("Conteúdo do arquivo:", data);
+        return data;  // Retorna os dados lidos
+    } catch (err) {
+        console.error("Erro ao ler o arquivo:", err);
+        throw err;  // Propaga o erro para que o chamador possa lidar com ele
+    }
+}
+async function getOrderFile(){
+
+// Caminho para o arquivo que você quer ler 
+   const filePath = path.join(__dirname, 'order_file.txt');
+   try {
+    const fileContent = readFileSync(filePath);
+    return fileContent;
+    // Aqui você pode fazer mais operações com fileContent
+    } catch (error) {
+        console.error("Erro ao obter os dados do arquivo:", error);
+    }
+
+   
+
 }
 
