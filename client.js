@@ -7,7 +7,9 @@ client.connect(port, host, function() {
     console.log('Connected to server');
     // Send an HL7 message
     const hl7Message = '\x0B' + 
-    'MSH|^~\&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|' + '\x0D'+
+
+    'MSH|^~\&|||||20240418124118||QRY^Q01|7|P|2.3.1||||0||ASCII|||' + '\x0D'+
+    //'MSH|^~\&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|' + '\x0D'+
     'QRD|||||||111||||'+ '\x0D'+
     'QRF|1|O'+ '\x0D'+
     '\x1C\x0D';

@@ -1,11 +1,12 @@
 const net = require('net');
-const fs = require('fs');
-const path = require('path');
 
 const globalState = require('./global');
 
+const utils = require('./utils');
+
 let message = '';
 let header = '';
+let headerCount = 0;
 let sample = '';
 let sampleOrders = '';
 
@@ -37,7 +38,7 @@ if (db_enabled=='TRUE'){
     });
     
 }
-    sistemaValido().then(isValid => {
+    utils.sistemaValido().then(isValid => {
         if (!isValid) {
             console.log('Aplicação Expirada. Entre em contato com Rodney Neville. rodneyneville@gmail.com');
             process.exit(0);
@@ -60,7 +61,7 @@ if (db_enabled=='TRUE'){
             console.log('2. Mensagens chegando na porta.');
 
             message = data.toString();
-            logMessage(message, 'EQP')
+            utils.logMessage(message, 'EQP')
 
             console.log('Bloco Recebido:', message);
             if (message.startsWith('\x0B')) { // Start of message
@@ -85,33 +86,6 @@ if (db_enabled=='TRUE'){
         });
     });
 
- 
-
-function logMessage(message, direction) {
-    const timestamp = new Date().toISOString();
-    const logMessage = `${timestamp} \t${direction} \t${message}\n-----------------------------------------------\n`;
-    
-    // Escreve no arquivo de log, criando o arquivo se não existir, ou anexando se já existir
-    fs.appendFile('server_log.txt', logMessage, err => {
-        if (err) throw err;
-        console.log('Log gerado no arquivo server_log.txt!');
-    });
-}
-
-
-function responseAck(socket){
-    console.log('Confirmando recebimento...');
-
-    const ack = '\x0B'+ header + '\x0D' +
-                'MSAA|AA|1|Mensagem Aceita||||0|' + '\x0D' + 
-                'ERR|0|' + '\x0D' + 
-                'QAK|SR|OK|' + '\x0D\x1C\x0D';
-
-    logMessage(ack, 'LIS')
-
-    socket.write(ack);
-}
-
 async function processHL7Message(socket) {
     console.log('Processando Mensagem HL7...');
     console.log('Mensagem Recebida: ', message);
@@ -126,7 +100,11 @@ async function processHL7Message(socket) {
 
         switch (segmentType) {
             case 'MSH':
-                header = processMSHSegment(fields);
+                processMSHSegment(segment);
+                responseAck(socket);
+
+                updateHeader();
+
                 responseSegments.push(header);
                 break;
             case 'QRD':
@@ -164,7 +142,6 @@ async function processHL7Message(socket) {
     }
 
     
-    responseAck(socket);
 
     msgType = getMessageType(header);
 
@@ -184,7 +161,7 @@ async function processHL7Message(socket) {
     }
 
    // const responseMessage = `\x0B${responseSegments.join('\x0D')}\x1C\x0D`;
-    logMessage(responseMessage,'LIS');
+    utils.logMessage(responseMessage,'LIS');
     socket.write(responseMessage);
     console.log('Responta enviada:', responseMessage);
     
@@ -192,15 +169,6 @@ async function processHL7Message(socket) {
 
 
 
-function incrementNumericPart(inputString) {
-    // Encontrar e capturar o segmento numérico no final da string
-    return inputString.replace(/(\d+)$/, (match) => {
-        // Converter o segmento numérico para um número, incrementar e converter de volta para string
-        const number = parseInt(match, 10) + 1;
-        // Manter o mesmo número de dígitos (preenchendo com zeros se necessário)
-        return number.toString().padStart(match.length, '0');
-    });
-}
 
 function getMessageType(msh){
     const fields = msh.split('|'); 
@@ -208,12 +176,34 @@ function getMessageType(msh){
     return messageType[0];
 }
 
-function processMSHSegment(fields) {
+
+function updateHeader() {
+    let segments = header.split('|'); 
+    segments[6] = utils.getDateTime();
+    segments[8] = utils.incrementNumericPart(segments[8]);
+    header = segments.join("|");
+}
+
+function processMSHSegment(message) {
     const segments = message.split('|'); 
     const messageType = segments[8];
-    const msgSend = incrementNumericPart(messageType)
+    const msgSend = utils.incrementNumericPart(messageType)
+    header =  `MSH|^~\&|${segments[4]}|${segments[4]}|${segments[2]}|${segments[3]}|${utils.getDateTime()}|${segments[7]}|${msgSend}||${segments[10]}|${segments[11]}|${segments[12]}||${segments[14]}|`;
 
-    return `MSH|^~\&|${segments[4]}|${segments[4]}|${segments[2]}|${segments[3]}|${getDateTime()}^S|${segments[7]}|${msgSend}|${getDateTime()}|${segments[10]}|${segments[11]}|${segments[12]}||${segments[14]}|`;
+    return header;
+}
+
+function responseAck(socket){
+    console.log('Confirmando recebimento...');
+    
+    const ack = '\x0B'+  header + '\x0D' +
+                'MSAA|AA|1|Mensagem Aceita||||0|' + '\x0D' + 
+                'ERR|0|' + '\x0D' + 
+                'QAK|SR|OK|' + '\x0D\x1C\x0D';
+
+    utils.logMessage(ack, 'LIS')
+
+    socket.write(ack);
 }
 
 function processPIDSegment(fields) {
@@ -232,28 +222,86 @@ function processOBXSegment(fields) {
 }
 
 async function processQRDSegment(fields) {
+    
+    let dspRec='';
 
     if (db_enabled=='TRUE'){
+
         const sampleOrders = await getSampleOrders(fields[7]);
 
+
         if (sampleOrders.length > 0) {
+            dspRec = 'DSP|1||HOSPITAL|||' + "\x0D" + 
+                'DSP|2||1|||' + "\x0D" + //n quarto
+                'DSP|3||'+sampleOrders[0].ord_patient?.toUpperCase()+'|||' + "\x0D" + //paciente
+                'DSP|4||'+utils.formatDateTime(sampleOrders[0]?.ord_birthday)+'|||' + "\x0D" + //aniversario
+                'DSP|5||'+sampleOrders[0].ord_gender?.toString()+'|||' + "\x0D" + //sexo 
+                'DSP|6|||||' + "\x0D" + //tp sanguineo
+                'DSP|7|||||' + "\x0D" + 
+                'DSP|8|||||' + "\x0D" + 
+                'DSP|9|||||' + "\x0D" + 
+                'DSP|10|||||' + "\x0D" + 
+                'DSP|12|||||' + "\x0D" + 
+                'DSP|13|||||' + "\x0D" + 
+                'DSP|14|||||' + "\x0D" + 
+                'DSP|15||outpatient|||' + "\x0D" + //tipopaciente
+                'DSP|16|||||' + "\x0D" + 
+                'DSP|17|||||' + "\x0D" + 
+                'DSP|18|||||' + "\x0D" + 
+                'DSP|19|||||' + "\x0D" + 
+                'DSP|20|||||' + "\x0D" + 
+                'DSP|21||'+fields[7]+'|||' + "\x0D" + //codamostra
+                'DSP|22||1|||' + "\x0D" + //sample id
+                'DSP|23||'+utils.getDateTime()+'|||' + "\x0D" + //datahora 
+                'DSP|24||'+sampleOrders[0].ord_urgent?.toString()+'|||' + "\x0D" + //emergencia
+                'DSP|25|||||' + "\x0D" + 
+                'DSP|26||'+sampleOrders[0].ord_sample_type?.toString()+'|||' + "\x0D" + //sample type
+                'DSP|27||AUTO|||' + "\x0D" + 
+                'DSP|28|||||' + "\x0D" ;
+
             const tests = sampleOrders[0].ord_test;
-            return formatResponse(tests);
+            
+            return dspRec + formatResponse(tests);
         }else{
             return "";
         
     
         }
     }else{
-        return await getOrderFile();
+        dspRec = 'DSP|1||HOSPITAL|||' + "\x0D" + 
+                'DSP|2||1|||' + "\x0D" + //n quarto
+                'DSP|3||ROBERTO|||' + "\x0D" + //paciente
+                'DSP|4||19760606000000|||' + "\x0D" + //aniversario
+                'DSP|5||M|||' + "\x0D" + //sexo 
+                'DSP|6|||||' + "\x0D" + //tp sanguineo
+                'DSP|7|||||' + "\x0D" + 
+                'DSP|8|||||' + "\x0D" + 
+                'DSP|9|||||' + "\x0D" + 
+                'DSP|10|||||' + "\x0D" + 
+                'DSP|12|||||' + "\x0D" + 
+                'DSP|13|||||' + "\x0D" + 
+                'DSP|14|||||' + "\x0D" + 
+                'DSP|15||outpatient|||' + "\x0D" + //tipopaciente
+                'DSP|16|||||' + "\x0D" + 
+                'DSP|17|||||' + "\x0D" + 
+                'DSP|18|||||' + "\x0D" + 
+                'DSP|19|||||' + "\x0D" + 
+                'DSP|20|||||' + "\x0D" + 
+                'DSP|21||'+fields[7]+'|||' + "\x0D" + //codamostra
+                'DSP|22||1|||' + "\x0D" + //sample id
+                'DSP|23||'+utils.getDateTime()+'|||' + "\x0D" + //datahora 
+                'DSP|24||N|||' + "\x0D" + //emergencia
+                'DSP|25|||||' + "\x0D" + 
+                'DSP|26||serum|||' + "\x0D" + //sample type
+                'DSP|27||AUTO|||' + "\x0D" + 
+                'DSP|28|||||' + "\x0D" ;
+        
+        return dspRec + await utils.getOrderFile();
     }
    
     
 }
 
-async function processQRFSegment(fields) {
-
-}
 
 function noExam(){
     return "MSA|AA|1|Message Accepted|||0|\x0DERR|0|\x0DQAK|SR|NF|\x0D";
@@ -263,7 +311,7 @@ function formatResponse(tests) {
     const items = tests?.split(',');
     const formattedItems = items.map((item, index) => {
         const id = 29 + index;
-        return `DSP|${id}|${item}||||`;
+        return `DSP|${id}|${item}^^^||||`;
     });
 
     return formattedItems.join('\x0D') + 
@@ -271,63 +319,14 @@ function formatResponse(tests) {
 }
 
 
-function getDateTime() {
-    const isoDate = new Date().toISOString(); // Exemplo: "2024-08-03T18:02:55.978Z"
-    const basicDateTime = isoDate
-        .replace(/-|:|\..*|Z/g, '') // Remove hifens, dois pontos, a fração de segundo e o 'Z'
-        .slice(0, 14); // Garante que apenas os primeiros 14 caracteres (YYYYMMDDHHMMSS) sejam pegos
-    return basicDateTime;
-}
 
-async function sistemaValido() {
 
-    const specificDate = new Date('2024-08-10T00:00:00Z');
-  
-    try {
-        const date = await getNetworkTime();
-        // Verificar a data - exemplo: verificar se a data é após 10 de agosto de 2024
-        const ret = specificDate > date ;
-        return  ret ;
-    } catch (error) {
-        console.error("Erro ao obter a hora do servidor NTP:", error);
-    }
-
-}
-
- function getNetworkTime() {
-    const ntpClient = require('ntp-client');
-
-    return new Promise((resolve, reject) => {
-        ntpClient.getNetworkTime("time.google.com", 123, (err, date) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(date);
-            }
-        });
-    });
-}
-
-async function fetchData() {
-    try {
-        // Executar a consulta usando o pool; não é necessário chamar db.connect() ou db.close()
-        const results = await db.query('SELECT * FROM ord WHERE ord_status="N" AND ord_eqp_id=1');
-        console.log('Obtendo folha...');
-        
-        // Supondo que globalState seja um módulo já definido e importado para manter o estado global
-        globalState.setData({ 'users': results });
-
-        console.log(results);
-    } catch (error) {
-        console.error('Erro ao executar a consulta:', error);
-    }
-}
 
 
 async function getSampleOrders(sample) {
     try {
         // Executar a consulta usando o pool; não é necessário chamar db.connect() ou db.close()
-        const results = await db.query(`SELECT * FROM ord WHERE ord_status="N" AND ord_sample="${sample}" AND ord_eqp_id=${equipment}`);
+        const results = await db.query(`SELECT * FROM ord WHERE ord_status="N" AND ord_sample="${sample}" AND ord_eqp="${equipment}"`);
         console.log('Obtendo folha da amostra ');
         return results;
 
@@ -339,39 +338,12 @@ async function getSampleOrders(sample) {
 async function getEquipmentData(equipment) {
     try {
         // Executar a consulta usando o pool; não é necessário chamar db.connect() ou db.close()
-        const results = await db.query(`SELECT * FROM eqp WHERE eqp_alias="${equipment}"`);
+        const results = await db.query('SELECT * FROM eqp WHERE eqp_alias="'+equipment+'"');
         console.log('Obtendo dados do equipamento...');
         return results;
 
     } catch (error) {
         console.error('Erro ao executar a consulta:', error);
     }
-}
-
-function readFileSync(filePath) {
-    try {
-        // Lê o arquivo de forma síncrona
-        const data = fs.readFileSync(filePath, 'utf8');
-        console.log("Conteúdo do arquivo:", data);
-        return data;  // Retorna os dados lidos
-    } catch (err) {
-        console.error("Erro ao ler o arquivo:", err);
-        throw err;  // Propaga o erro para que o chamador possa lidar com ele
-    }
-}
-async function getOrderFile(){
-
-// Caminho para o arquivo que você quer ler 
-   const filePath = path.join(__dirname, 'order_file.txt');
-   try {
-    const fileContent = readFileSync(filePath);
-    return fileContent;
-    // Aqui você pode fazer mais operações com fileContent
-    } catch (error) {
-        console.error("Erro ao obter os dados do arquivo:", error);
-    }
-
-   
-
 }
 
