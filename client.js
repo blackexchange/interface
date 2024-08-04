@@ -8,7 +8,7 @@ client.connect(port, host, function() {
     // Send an HL7 message
     const hl7Message = '\x0B' + 
 
-    'MSH|^~\&|||||20240418124118||QRY^Q01|7|P|2.3.1||||0||ASCII|||' + '\x0D'+
+    'MSH|^~\&|3|4|5|6|20240418124118|8|QRY^Q01|7|P|2.3.1|13|14|15|0|17|ASCII|19|20|' + '\x0D'+
     //'MSH|^~\&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|' + '\x0D'+
     'QRD|||||||111||||'+ '\x0D'+
     'QRF|1|O'+ '\x0D'+

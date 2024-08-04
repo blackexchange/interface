@@ -3,6 +3,8 @@ const net = require('net');
 const globalState = require('./global');
 
 const utils = require('./utils');
+const dbCon = require('./dbCon');
+
 
 let message = '';
 let header = '';
@@ -32,7 +34,7 @@ if (fila=='TRUE'){
 console.log('==== Analisador de Protocolo HL7 v2.0 By Neville =====' );
 
 if (db_enabled=='TRUE'){
-    getEquipmentData(equipment).then(e=>{
+    dbCon.getEquipmentData(equipment).then(e=>{
 
         console.log(e[0] );
     });
@@ -188,7 +190,7 @@ function processMSHSegment(message) {
     const segments = message.split('|'); 
     const messageType = segments[8];
     const msgSend = utils.incrementNumericPart(messageType)
-    header =  `MSH|^~\&|${segments[4]}|${segments[4]}|${segments[2]}|${segments[3]}|${utils.getDateTime()}|${segments[7]}|${msgSend}||${segments[10]}|${segments[11]}|${segments[12]}||${segments[14]}|`;
+    header =  `MSH|^~\&|${segments[4]}|${segments[4]}|${segments[2]}|${segments[3]}|${utils.getDateTime()}|${segments[7]}|${msgSend}||${segments[10]}|${segments[11]}|${segments[12]}||${segments[14]}|${segments[15]}|${segments[16]}|${segments[17]}|${segments[18]}|${segments[19]}|`;
 
     return header;
 }
@@ -227,7 +229,7 @@ async function processQRDSegment(fields) {
 
     if (db_enabled=='TRUE'){
 
-        const sampleOrders = await getSampleOrders(fields[7]);
+        const sampleOrders = await dbCon.getSampleOrders(fields[7],equipment);
 
 
         if (sampleOrders.length > 0) {
@@ -320,30 +322,4 @@ function formatResponse(tests) {
 
 
 
-
-
-
-async function getSampleOrders(sample) {
-    try {
-        // Executar a consulta usando o pool; não é necessário chamar db.connect() ou db.close()
-        const results = await db.query(`SELECT * FROM ord WHERE ord_status="N" AND ord_sample="${sample}" AND ord_eqp="${equipment}"`);
-        console.log('Obtendo folha da amostra ');
-        return results;
-
-    } catch (error) {
-        console.error('Erro ao executar a consulta:', error);
-    }
-}
-
-async function getEquipmentData(equipment) {
-    try {
-        // Executar a consulta usando o pool; não é necessário chamar db.connect() ou db.close()
-        const results = await db.query('SELECT * FROM eqp WHERE eqp_alias="'+equipment+'"');
-        console.log('Obtendo dados do equipamento...');
-        return results;
-
-    } catch (error) {
-        console.error('Erro ao executar a consulta:', error);
-    }
-}
 
