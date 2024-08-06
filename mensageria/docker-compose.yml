@@ -1,0 +1,20 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    volumes:
+      - ./init-rabbit.sh:/opt/rabbitmq/init-rabbit.sh
+      - ./rabbitmq_data:/var/lib/rabbitmq  
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - "5672:5672"  # Porta padrão para conexões AMQP
+      - "15672:15672" # Porta para o painel de gerenciamento do RabbitMQ
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - "chmod +x /opt/rabbitmq/init-rabbit.sh && /opt/rabbitmq/init-rabbit.sh"
+    restart: always
+
+volumes:
+  rabbitmq_data:
+    driver: local

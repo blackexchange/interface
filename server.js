@@ -77,10 +77,6 @@ if (db_enabled=='TRUE'){
             }else{
                 message='';
             }
-           
-
-
-    
         });
 
         socket.on('end', () => {
@@ -95,6 +91,7 @@ async function processHL7Message(socket) {
     const segments = message.split('\x0D'); // Divide a mensagem em segmentos por retorno de carro
     const responseSegments = [];
 
+    let response = true;
 
     for (const segment of segments) {
         const fields = segment.split('|');
@@ -138,6 +135,7 @@ async function processHL7Message(socket) {
                 // responseSegments.push(processOBXSegment(fields));
                 break;
             default:
+               
                 console.log(`Unknown segment type: ${segmentType}`);
                 break;
         }
@@ -157,15 +155,23 @@ async function processHL7Message(socket) {
             console.log("==== RESULTADO ====");
             break;
 
+        case 'ACK':
+            response = false;
+            console.log("==== ACEITE ====");
+            break;
+    
         default:
-            console.log(`Tipo desconhecido: ${segmentType}`);
+            response = false;
             break;
     }
 
-   // const responseMessage = `\x0B${responseSegments.join('\x0D')}\x1C\x0D`;
-    utils.logMessage(responseMessage,'LIS');
-    socket.write(responseMessage);
-    console.log('Responta enviada:', responseMessage);
+    if (response) {
+
+    // const responseMessage = `\x0B${responseSegments.join('\x0D')}\x1C\x0D`;
+        utils.logMessage(responseMessage,'LIS');
+        socket.write(responseMessage);
+        console.log('Responta enviada:', responseMessage);
+    }
     
 }
 
@@ -187,22 +193,39 @@ function updateHeader() {
 }
 
 function processMSHSegment(message) {
-    const segments = message.split('|'); 
-    const messageType = segments[8];
-    const msgSend = utils.incrementNumericPart(messageType)
-    header =  `MSH|^~\&|${segments[4]}|${segments[4]}|${segments[2]}|${segments[3]}|${utils.getDateTime()}|${segments[7]}|${msgSend}||${segments[10]}|${segments[11]}|${segments[12]}||${segments[14]}|${segments[15]}|${segments[16]}|${segments[17]}|${segments[18]}|${segments[19]}|`;
+    let segments = message.split('|');
 
-    return header;
+    const senderName = segments[2] 
+    const senderApp  =  segments[3]
+    
+    segments[2] = segments[4];
+    segments[3] = segments[5];
+    
+    segments[4] = senderName;
+    segments[5] = senderApp;
+    
+    //segments[6] = utils.getDateTime();
+    
+    segments[8] = utils.incrementNumericPart(segments[8]);
+    
+    header = segments.join("|");
+
+   // header =  `MSH|^~\&|${segments[4]}|${segments[4]}|${segments[2]}|${segments[3]}|${utils.getDateTime()}|${segments[7]}|${msgSend}||${segments[10]}|${segments[11]}|${segments[12]}||${segments[14]}|${segments[15]}|${segments[16]}|${segments[17]}|${segments[18]}|${segments[19]}|`;
+
+    //return header;
 }
 
 function responseAck(socket){
     console.log('Confirmando recebimento...');
+    const id = header.split('|')[9];
     
     const ack = '\x0B'+  header + '\x0D' +
-                'MSAA|AA|1|Mensagem Aceita||||0|' + '\x0D' + 
+                'MSAA|AA|'+id+'|Mensagem Aceita||||0|' + '\x0D' + 
                 'ERR|0|' + '\x0D' + 
                 'QAK|SR|OK|' + '\x0D\x1C\x0D';
 
+//                const ack = '\x0B'+  header + '\x0D' + 'MSA|AA|'+id+'|' + '\x0D\x1C\x0D';
+    
     utils.logMessage(ack, 'LIS')
 
     socket.write(ack);

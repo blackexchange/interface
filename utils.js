@@ -87,6 +87,19 @@ class Utils {
     }
 
     static incrementNumericPart(inputString) {
+        let msgType = inputString.split('^')[0];
+
+        switch (msgType) {
+            case 'QRY':
+                inputString = inputString.replace(msgType,'QCK')
+                break;
+            default:
+                inputString = inputString.replace(msgType,'ACK')
+
+                break;
+        }
+        
+        inputString = inputString.replace('QRY',)
         // Encontrar e capturar o segmento numérico no final da string
         return inputString.replace(/(\d+)$/, (match) => {
             // Converter o segmento numérico para um número, incrementar e converter de volta para string

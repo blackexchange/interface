@@ -1,0 +1,35 @@
+// Importar a biblioteca amqplib
+const amqp = require('amqplib');
+
+async function createQueue() {
+    // URL de conexão com o RabbitMQ
+    const url = 'amqp://user:password@localhost';
+
+    try {
+        // Criar uma conexão com o RabbitMQ
+        const conn = await amqp.connect(url);
+        console.log('Conexão estabelecida com sucesso!');
+
+        // Criar um canal
+        const channel = await conn.createChannel();
+        console.log('Canal criado com sucesso!');
+
+        // Nome da fila
+        const queue = 'minhaFila';
+
+        // Criar uma fila
+        await channel.assertQueue(queue, {
+            durable: true  // Fila durável (não será perdida caso o RabbitMQ reinicie)
+        });
+        console.log(`Fila '${queue}' criada com sucesso!`);
+
+        // Fechar a conexão
+        await conn.close();
+        console.log('Conexão fechada!');
+    } catch (error) {
+        console.error('Erro ao conectar ou criar a fila:', error);
+    }
+}
+
+// Executar a função createQueue
+createQueue();

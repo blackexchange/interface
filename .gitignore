@@ -1,4 +1,6 @@
 # Logs
+rabbitmq_data
+enabled_plugins
 logs
 *.log
 *.exe
