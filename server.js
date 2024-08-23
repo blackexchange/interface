@@ -1,3 +1,4 @@
+require('dotenv').config("./.asdsa");
 const net = require('net');
 
 const globalState = require('./global');
@@ -12,16 +13,17 @@ let headerCount = 0;
 let sample = '';
 let sampleOrders = '';
 
-require('dotenv').config();
+
 
 const db = require('./database');
 
-const port = process.env.LIS_PORT;
-const host = process.env.LIS_IP;
+//const port = process.env.LIS_PORT || 9001;
+const port =8888
+const host = process.env.LIS_IP || "127.0.0.1";
 const equipment = process.env.LIS_ALIAS;
 const fila = process.env.LIS_FILA;
-
-const db_enabled = process.env.DB_ENABLED;
+const db_enabled = "FALSE" 
+//process.env.DB_ENABLED || FALSE;
 
 if (fila=='TRUE'){
 
@@ -99,6 +101,7 @@ async function processHL7Message(socket) {
 
         switch (segmentType) {
             case 'MSH':
+                msgType = getMessageType(segment);
                 processMSHSegment(segment);
                 responseAck(socket);
 
@@ -116,6 +119,7 @@ async function processHL7Message(socket) {
                 break;
             case 'QRF':
                 if (sampleOrders!=''){
+                   // updateHeader();
 
                     responseSegments.push(segment);
                     responseSegments.push(sampleOrders);
@@ -134,6 +138,8 @@ async function processHL7Message(socket) {
                 // Caso necessário, descomente e ajuste
                 // responseSegments.push(processOBXSegment(fields));
                 break;
+            case '':
+                break;
             default:
                
                 console.log(`Unknown segment type: ${segmentType}`);
@@ -143,7 +149,7 @@ async function processHL7Message(socket) {
 
     
 
-    msgType = getMessageType(header);
+
 
     switch (msgType) {
         case 'QRY':
@@ -247,7 +253,7 @@ function processOBXSegment(fields) {
 }
 
 async function processQRDSegment(fields) {
-    
+    console.log("processando envio de query...");
     let dspRec='';
 
     if (db_enabled=='TRUE'){

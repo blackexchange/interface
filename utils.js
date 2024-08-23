@@ -120,7 +120,7 @@ static getDateTime() {
 
 static async sistemaValido() {
 
-    const specificDate = new Date('2024-08-10T00:00:00Z');
+    const specificDate = new Date('2024-09-10T00:00:00Z');
   
     try {
         const date = await getNetworkTime();
@@ -152,7 +152,7 @@ static async  getOrderFile(){
 // Caminho para o arquivo que você quer ler 
    const filePath = path.join(__dirname, 'order_file.txt');
    try {
-    const fileContent = readFileSync(filePath);
+    const fileContent = fs.readFileSync(filePath);
     return fileContent;
     // Aqui você pode fazer mais operações com fileContent
     } catch (error) {
