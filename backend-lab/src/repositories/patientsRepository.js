@@ -1,4 +1,4 @@
-const Patient = require('../models/patientModel');
+const {Patient} = require('../models/patientModel');
 
 
 function createPatients(patients, session) {
@@ -17,22 +17,38 @@ function getPatientById(patientId) {
     return Patient.findById(patientId).exec();
 }
 
-
 async function updatePatient(id, newPatient) {
-
     try {
-        // Encontrar o paciente pelo ID e atualizar com os novos dados, ou inserir se não encontrar
+        // Encontrar o paciente pelo ID e atualizar com os novos dados
         const updatedPatient = await Patient.findOneAndUpdate(
             { _id: id }, // Filtro para encontrar o paciente pelo ID
             { $set: newPatient }, // Atualizar os campos com os novos dados
-            { new: true, upsert: true } // 'new: true' retorna o documento atualizado, 'upsert: true' cria o documento se não encontrar
+            { new: true } // 'new: true' retorna o documento atualizado
         ).exec();
 
-        return updatedPatient;
+        if (!updatedPatient) {
+            // Se nenhum paciente foi encontrado, retornar uma mensagem de erro
+            return {
+                success: false,
+                error: 'Patient not found.'
+            };
+        }
+
+        // Retornar um objeto indicando sucesso
+        return {
+            success: true,
+            data: updatedPatient
+        };
     } catch (error) {
-        return error.message;
+        // Retornar um objeto indicando erro
+        return {
+            success: false,
+            error: error.message
+        };
     }
 }
+
+
 
 
 module.exports = {

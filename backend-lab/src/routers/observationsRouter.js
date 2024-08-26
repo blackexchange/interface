@@ -6,6 +6,7 @@ const observationController = require('../controllers/observationsController');
 // Rota para criar um novo paciente
 router.post('/', observationController.createObservation);
 
-router.patch('/:id', observationController.updateObservation);
+router.put('/:id', observationController.updateObservation);
+router.put('/:id/results', observationController.updateResults);
 
 module.exports = router;

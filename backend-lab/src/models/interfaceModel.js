@@ -41,6 +41,7 @@ const interfaceSchema = new mongoose.Schema({
             "SIGNALS",
             "TUBE_SORTERS",
             "B2B",
+            "COAGULOGRAM",
             "OTHERS"
         ]
     },
@@ -49,8 +50,13 @@ const interfaceSchema = new mongoose.Schema({
         type: String,
         enum: ["HL7", "ASTM","OTHERS"]
     },
+    testLevel: {
+        type:String, 
+        enum: ["1","2","3"]
+    },
 
     exams:[{
+        name:String, 
         code: String,
         externalCode: String,
         material: String,
@@ -74,6 +80,12 @@ const interfaceSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',  // Referência ao modelo User
+        required: true
+    },
+
 
     updatedAt: {
         type: Date,
@@ -88,4 +100,4 @@ interfaceSchema.pre('save', function (next) {
 
 const Interface = mongoose.model('Interface', interfaceSchema);
 
-module.exports = Interface;
+module.exports = {Interface, interfaceSchema};

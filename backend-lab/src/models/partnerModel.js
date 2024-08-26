@@ -1,24 +1,31 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
+const partnerSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
     },
 
-    phoneNumber: [{
+    phone: [{
         type: String
     }],
+
     email: {
-        type: String,
-        required:true,
-        unique:true
-    },
-    
-    password: {
         type: String,
         required:true
     },
+
+    active: {
+        type:Boolean,
+        default: false
+    },
+
+    contacts:[{
+        "name":String,
+        "email":String,
+        "phone":String
+    }],
+
     createdAt: {
         type: Date,
         default: Date.now
@@ -29,11 +36,11 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-userSchema.pre('save', function (next) {
+partnerSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
 
-const User = mongoose.model('User', userSchema);
+const Partner = mongoose.model('Partner', partnerSchema);
 
-module.exports = User;
+module.exports = Partner;

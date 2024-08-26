@@ -41,10 +41,13 @@ async function updatePatient(req, res, next) {
     const { patientId } = req.params;
     try {
         const updatedPatient = await patientsRepository.updatePatient(patientId, req.body);
-        if (!updatedPatient) {
-            return res.status(404).json({ message: "Patient not found" });
+
+        if (!updatedPatient.success){
+            return res.status(404).json({ message: updatedPatient.error });
         }
-        res.json(updatedPatient);
+
+        res.status(200).json(updatedPatient.data);
+
     } catch (err) {
         logger('system', err);
         res.status(500).json({ message: err.message });

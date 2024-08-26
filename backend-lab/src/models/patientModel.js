@@ -43,4 +43,4 @@ patientSchema.pre('save', function (next) {
 
 const Patient = mongoose.model('Patient', patientSchema);
 
-module.exports = Patient;
+module.exports = {Patient, patientSchema};

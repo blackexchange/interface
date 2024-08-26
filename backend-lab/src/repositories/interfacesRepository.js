@@ -1,4 +1,4 @@
-const Interface = require('../models/interfaceModel');
+const {Interface} = require('../models/interfaceModel');
 
 
 

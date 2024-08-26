@@ -1,67 +1,113 @@
 const Observation = require('../models/observationModel');
+const {Patient} = require('../models/patientModel');
+const {Interface} = require('../models/interfaceModel');
 
 
 
-function createObservationRequest(observation, session) {
+
+async function createObservationRequest(observation, session) {
+
+    const patient = await Patient.findById(observation.patient._id).lean();
+    if (!patient) {
+        throw new Error('Patient not found');
+    }
+
+    // Buscar o documento completo de Interface com base no ID
+    //const interfaceData = await Interface.findById(observation.interface._id).lean();
+    const interfaceData = await Interface.findOne({ _id: observationData.interface._id }).lean();
+      
+    if (!interfaceData) {
+        throw new Error('Interface not found');
+    }
+
+    observation.patient = patient;
+    observation.interface = interfaceData;
+
+
     return Observation.insertMany(observation, { session });
 }
 
 
-async function updateResult(id, newResult) {
-
+async function updateResults(id, newResult) {
     try {
         // Encontra a observação pelo ID e insere/atualiza o resultado no array results
         const updatedObservation = await Observation.findOneAndUpdate(
-            { _id: id, "results.test": newResult.test }, // Filtra pelo ID e pelo nome do teste
-            { $set: { "results.$": newResult } }, // Atualiza o documento que corresponde
-            { new: true, upsert: true } // Retorna o documento atualizado e cria um novo se não existir
+            { _id: id ,status: { $ne: "DONE" }}, // Filtra pelo ID e pelo nome do teste
+            { $push: { "results": { $each: newResult.results } } },
+            { new: true} // Retorna o documento atualizado e cria um novo se não existir
         ).exec();
 
-        // Se o teste não foi encontrado no array, adicionar como um novo
-        if (!updatedObservation) {
-            await Observation.findByIdAndUpdate(
-                id,
-                { $push: { results: newResult } },
-                { new: true }
-            ).exec();
-        }
+        if (updatedObservation){
+            const allTestsCompleted = areAllTestsCompleted(updatedObservation);
 
-        return res.json(updatedObservation);
+            if (allTestsCompleted) {
+                const doneObservation = await Observation.findOneAndUpdate(
+                    { _id: id ,status: { $ne: "DONE" }}, // Filtra pelo ID e pelo nome do teste
+                    { $set: { "status":"DONE"} },
+                    { new: true} // Retorna o documento atualizado e cria um novo se não existir
+                ).exec();
+            } else {
+                console.log("Nem todos os testes têm resultados.");
+            }
+        }
+       
+        return {
+            success: true,
+            data: updateObservation
+        };
+
     } catch (error) {
         console.error("Error updating/inserting observation:", error);
-        return res.status(500).send(error.message);
+        return error.message;
     }
 }
 
-async function updateObservation(id, newResult) {
-console.log(newResult);
+async function updateObservation(id, newObservation) {
+
+    const patientId = newObservation.patient;
     try {
-        // Encontra a observação pelo ID e insere/atualiza o resultado no array results
-        const updatedObservation = await Observation.findOneAndUpdate(
-            { _id: id, "results.test": newResult.test }, // Filtra pelo ID e pelo nome do teste
-            { $set: { "results.$": newResult } }, // Atualiza o documento que corresponde
-            { new: true, upsert: true } // Retorna o documento atualizado e cria um novo se não existir
+        // Encontrar o paciente pelo ID e atualizar com os novos dados
+        const updateObservation = await Observation.findOneAndUpdate(
+            { _id: id , patient:patientId}, // Filtro para encontrar o paciente pelo ID
+            { $set: newObservation }, // Atualizar os campos com os novos dados
+            { new: true } // 'new: true' retorna o documento atualizado
         ).exec();
 
-        // Se o teste não foi encontrado no array, adicionar como um novo
-        if (!updatedObservation) {
-            await Observation.findByIdAndUpdate(
-                id,
-                { $push: { results: newResult } },
-                { new: true }
-            ).exec();
+        if (!updateObservation) {
+            // Se nenhum paciente foi encontrado, retornar uma mensagem de erro
+            return {
+                success: false,
+                error: 'Observation not found.'
+            };
         }
 
-        return updatedObservation;
+        // Retornar um objeto indicando sucesso
+        return {
+            success: true,
+            data: updateObservation
+        };
     } catch (error) {
-        console.error("Error updating/inserting observation:", error);
-      //  return res.status(500).send(error.message);
+        // Retornar um objeto indicando erro
+        return {
+            success: false,
+            error: error.message
+        };
     }
+}
+
+function areAllTestsCompleted(observation) {
+    const { tests, results } = observation;
+
+    // Extrai apenas os nomes dos testes de `results`
+    const completedTests = results.map(result => result.test);
+
+    // Verifica se todos os testes estão presentes em `completedTests`
+    return tests.every(test => completedTests.includes(test));
 }
 
 module.exports = {
 
     createObservationRequest,
     updateObservation,
-    updateResult
+    updateResults
 };

@@ -1,17 +1,14 @@
 const mongoose = require('mongoose');
 const Patient = require('./patientModel');
+const Interface = require('./interfaceModel');
+
+const Schema = mongoose.Schema;
 
 const observationSchema = new mongoose.Schema({
 
-    patient: {
-        type: mongoose.ObjectId,
-        ref:'Patient'
-    },
+    patient: Patient.patientSchema,
     
-    interface: {
-        type: String,
-
-    },
+    interface: Interface.interfaceSchema,
 
     barCode: {
         type: String
@@ -27,11 +24,45 @@ const observationSchema = new mongoose.Schema({
         required: true
     }],
 
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',  // Referência ao modelo User
+        required: true
+    },
+
     results:[{
         test: String,
         param: String,
         value: String,
-        text: String,
+        unit: String,
+        flags: [String],
+        referenceRange: String,
+        text: String ,
+        additionalData: Schema.Types.Mixed,
+        
+        results:[{
+            test: String,
+            param: String,
+            value: String,
+            unit: String,
+            flags: [String],
+            referenceRange: String,
+            text: String ,
+            additionalData: Schema.Types.Mixed,
+            results:[{
+                test: String,
+                param: String,
+                value: String,
+                unit: String,
+                flags: [String],
+                referenceRange: String,
+                text: String ,
+                additionalData: Schema.Types.Mixed
+    
+            }]
+
+        }],
+        additionalData: Schema.Types.Mixed,
         createdAt: {
             type: Date,
             default: Date.now
