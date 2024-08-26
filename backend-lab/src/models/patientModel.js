@@ -30,6 +30,12 @@ const patientSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',  // Referência ao modelo User
+        required: true
+    },
+
     updatedAt: {
         type: Date,
         default: Date.now
