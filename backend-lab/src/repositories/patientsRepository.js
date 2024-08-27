@@ -5,7 +5,7 @@ function createPatients(patients, session) {
     return Patient.insertMany(patients, { session });
 }
 
-function deletePatientById(patientId, session) {
+function deletePatient(patientId, session) {
     return Patient.findByIdAndDelete(patientId).session(session).exec();
 }
 
@@ -15,6 +15,10 @@ function getPatientsByCondition(condition) {
 
 function getPatientById(patientId) {
     return Patient.findById(patientId).exec();
+}
+
+function getPatients() {
+    return Patient.find({}).exec();
 }
 
 async function updatePatient(id, newPatient) {
@@ -53,8 +57,9 @@ async function updatePatient(id, newPatient) {
 
 module.exports = {
     createPatients,
-    deletePatientById,
+    deletePatient,
     getPatientsByCondition,
     getPatientById,
+    getPatients,
     updatePatient
 };

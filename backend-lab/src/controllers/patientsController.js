@@ -27,7 +27,12 @@ async function getPatients(req, res, next) {
 
 async function createPatient(req, res, next) {
     try {
-        const newPatient = await patientsRepository.createPatients(req.body);
+        const data = {
+            ...req.body,
+            createdBy: res.locals.userId,  // Adiciona o ID do usuário que enviou a requisição
+        };
+    
+        const newPatient = await patientsRepository.createPatients(data);
         res.status(201).json(newPatient);
     } catch (err) {
         logger('system', err);
