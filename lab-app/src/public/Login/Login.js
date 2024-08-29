@@ -21,8 +21,10 @@ function Login() {
 
         doLogin(email, password)
             .then(response => {
+                console.log(response.data)
                 localStorage.setItem('token', response.token);
-                navigate('/dashboard');
+                localStorage.setItem('data', JSON.stringify(response.data))
+                navigate('/patients');
             })
             .catch(err => {
                 console.error(err);

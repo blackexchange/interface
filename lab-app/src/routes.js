@@ -2,10 +2,20 @@ import React from 'react';
 import { Route, BrowserRouter, Routes, Navigate } from 'react-router-dom';
 import Login from './public/Login/Login';
 import Settings from './private/Settings/Settings';
+
 import Patients from './private/Patients/Patients';
 import PatientForm from './private/Patients/PatientForm';
+
 import Interfaces from './private/Interfaces/Interfaces';
 import InterfaceForm from './private/Interfaces/InterfaceForm';
+
+import Exams from './private/Exams/Exams';
+import ExamForm from './private/Exams/ExamForm';
+
+import Orders from './private/Orders/Orders';
+import OrderForm from './private/Orders/OrderForm';
+
+
 
 
 /*import Dashboard from './private/Dashboard/Dashboard';
@@ -64,7 +74,62 @@ function Router() {
                         <InterfaceForm />
                     </PrivateRoute>
                 } />
-                
+
+                {/* EXAMS*/}
+                <Route path='/exams' element={
+                    <PrivateRoute>
+                        <Exams />
+                    </PrivateRoute>
+                } />
+
+                  <Route path='/exams/new' element={
+                    <PrivateRoute>
+                        <ExamForm />
+                    </PrivateRoute>
+                }/> 
+                    <Route path='/exams/edit/:id' element={
+                    <PrivateRoute>
+                        <InterfaceForm />
+                    </PrivateRoute>
+                } />
+
+                {/* ORDERS*/}
+                <Route path='/orders' element={
+                    <PrivateRoute>
+                        <Orders />
+                    </PrivateRoute>
+                } />
+
+                  <Route path='/orders/new' element={
+                    <PrivateRoute>
+                        <OrderForm />
+                    </PrivateRoute>
+                }/> 
+                    <Route path='/orders/edit/:id' element={
+                    <PrivateRoute>
+                        <InterfaceForm />
+                    </PrivateRoute>
+                } />
+
+                {/* OBSERVATIONS*
+                <Route path='/observations' element={
+                    <PrivateRoute>
+                        <Observations />
+                    </PrivateRoute>
+                } />
+
+                  <Route path='/observations/new' element={
+                    <PrivateRoute>
+                        <ExamForm />
+                    </PrivateRoute>
+                }/> 
+                    <Route path='/observations/edit/:id' element={
+                    <PrivateRoute>
+                        <ObservationForm />
+                    </PrivateRoute>
+                } />
+                 */}
+
                 <Route path="/settings" element={
                     <PrivateRoute>
                         <Settings />

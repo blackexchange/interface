@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createEquipment, updateEquipment, getEquipmentById } from '../../services/InterfacesService';
 import Menu from '../../components/Menu/Menu';
+import SelectExams from '../../components/SelectExams/SelectExams';
 import Footer from '../../components/Footer/Footer';
 import Toast from '../../components/Toast/Toast';
+import InterfaceExams from './InterfaceExams';
+import { getAreas } from '../../services/LocalServices';
+
 
 function InterfaceForm() {
     const [equipment, setEquipment] = useState({
@@ -18,18 +22,28 @@ function InterfaceForm() {
         active: false,
         actualSetup: '',
     });
+
+    const [currentExam, setCurrentExam] = useState({ code: '', test:'', param:'', material: '', method:'' });
     const [isEditing, setIsEditing] = useState(false);
     const [notification, setNotification] = useState({});
-    
+
     const { id } = useParams();
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
+
+    const listArea = getAreas();
 
     useEffect(() => {
         if (id) {
             setIsEditing(true);
             getEquipmentById(token, id)
-                .then((data) => setEquipment(data))
+                .then((data) => {
+                    if (data) {
+                        setEquipment(data);
+                    } else {
+                        setNotification({ type: 'error', text: 'No data found for the specified equipment.' });
+                    }
+                })
                 .catch((error) => {
                     console.error('Error fetching equipment:', error);
                     setNotification({ type: 'error', text: 'Failed to load equipment data' });
@@ -40,6 +54,39 @@ function InterfaceForm() {
     function handleInputChange(event) {
         const { name, value } = event.target;
         setEquipment(prevState => ({ ...prevState, [name]: value }));
+    }
+
+    function handleExamChange(index, event) {
+        const { name, value } = event.target;
+        const updatedExams = equipment.exams.map((exam, i) => 
+            i === index ? { ...exam, [name]: value } : exam
+        );
+        setEquipment(prevState => ({ ...prevState, exams: updatedExams }));
+        
+    }
+
+
+    function addExam() {
+        
+        if (!currentExam.code || !currentExam.material || !currentExam.test || !currentExam.param || !currentExam.method) {
+            setNotification({ type: 'error', text: 'Please select an exam and provide material.' });
+            return;
+        }
+
+        setEquipment(prevState => ({
+            ...prevState,
+            exams: [...prevState.exams, currentExam],
+        }));
+
+
+        setCurrentExam({ code: '', material: '' });
+    }
+
+    function removeExam(index) {
+        setEquipment(prevState => ({
+            ...prevState,
+            exams: prevState.exams.filter((_, i) => i !== index),
+        }));
     }
 
     function handleSubmit(event) {
@@ -80,7 +127,9 @@ function InterfaceForm() {
                     <div className="col-12">
                         <div className="card card-body border-0 shadow mb-4">
                             <form onSubmit={handleSubmit}>
+                                {/* Campos do formulário como nome, marca, modelo, etc. */}
                                 <div className="row">
+                                    {/* Código, Nome, Marca, Modelo */}
                                     <div className="col-md-2 mb-2">
                                         <label htmlFor="code">Code</label>
                                         <input
@@ -128,7 +177,7 @@ function InterfaceForm() {
                                         />
                                     </div>
                                 </div>
-                  
+                                {/* Area, Protocol, Test Level */}
                                 <div className="row">
                                     <div className="col-md-6 mb-3">
                                         <label htmlFor="area">Area</label>
@@ -139,32 +188,11 @@ function InterfaceForm() {
                                             value={equipment.area}
                                             onChange={handleInputChange}
                                         >
-                                            <option value="">Select</option>
-                                            <option value="B2B">B2B</option>
-                                            <option value="CARDIOLOGY">Cardiology</option>
-                                            <option value="CLINICAL_BIOCHEMISTRY">Clinical Biochemistry</option>
-                                            <option value="COAGULOGRAM">Coagulogram</option>
-                                            <option value="CYTOLOGY">Cytology</option>
-                                            <option value="DERMATOLOGY">Dermatology</option>
-                                            <option value="ENDOCRINOLOGY">Endocrinology</option>
-                                            <option value="GASTROENTEROLOGY">Gastroenterology</option>
-                                            <option value="HEMATOLOGY">Hematology</option>
-                                            <option value="HISTOPATHOLOGY_PATHOLOGY">Histopathology Pathology</option>
-                                            <option value="IMMUNOLOGY">Immunology</option>
-                                            <option value="MEDICAL_BIOPHYSICS">Medical Biophysics</option>
-                                            <option value="MICROBIOLOGY">Microbiology</option>
-                                            <option value="MOLECULAR_GENETICS">Molecular Genetics</option>
-                                            <option value="NEUROLOGY">Neurology</option>
-                                            <option value="ONCOLOGY">Oncology</option>
-                                            <option value="OPHTHALMOLOGY">Ophthalmology</option>
-                                            <option value="OTHERS">Others</option>
-                                            <option value="PARASITOLOGY">Parasitology</option>
-                                            <option value="SIGNALS">Signals</option>
-                                            <option value="TUBE_SORTERS">Tube Sorters</option>
-                                            <option value="TOXICOLOGY">Toxicology</option>
-                                            <option value="URINALYSIS">Urinalysis</option>
-                                            <option value="VIROLOGY">Virology</option>
-
+                                             {listArea.map((item, index) => (
+                                                <option key={index} value={item.value}>
+                                                    {item.name}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                     <div className="col-md-3 mb-3">
@@ -198,8 +226,8 @@ function InterfaceForm() {
                                         </select>
                                     </div>
                                 </div>
-                                <div className="row">
-                                    
+                                    {/* Campos adicionais */}
+                                    <div className="row">
                                     <div className="col-md-12 mb-3">
                                         <label htmlFor="actualSetup">Actual Setup</label>
                                         <input
@@ -211,20 +239,93 @@ function InterfaceForm() {
                                             onChange={handleInputChange}
                                         />
                                     </div>
+                                  
                                 </div>
-                                <div className="form-check">
-                                    <input
-                                        type="checkbox"
-                                        className="form-check-input"
-                                        id="active"
-                                        name="active"
-                                        checked={equipment.active}
-                                        onChange={() => setEquipment(prevState => ({ ...prevState, active: !prevState.active }))}
-                                    />
-                                    <label className="form-check-label" htmlFor="active">Active</label>
+                                <hr />
+
+                                {/* Seleção e Adição de Exames */}
+                                <div className="row">
+                                    <div className="col-md-3 mb-3">
+                                        <SelectExams 
+                                            examCode={currentExam.code}
+                                            onChange={(e) => setCurrentExam({ ...currentExam, code: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="col-md-3 mb-3">
+                                        <label htmlFor="test">Test</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="test"
+                                            name="test"
+                                            value={currentExam.test}
+                                            onChange={(e) => setCurrentExam({ ...currentExam, test: e.target.value })}
+                                            placeholder="Test"
+                                        />
+                                    </div>
+                                    <div className="col-md-3 mb-3">
+                                        <label htmlFor="param">Param</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="param"
+                                            name="param"
+                                            value={currentExam.param}
+                                            onChange={(e) => setCurrentExam({ ...currentExam, param: e.target.value })}
+                                            placeholder="Param"
+                                        />
+                                    </div>
+                                    <div className="col-md-3 mb-3">
+                                        <label htmlFor="material">Material</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="material"
+                                            name="material"
+                                            value={currentExam.material}
+                                            onChange={(e) => setCurrentExam({ ...currentExam, material: e.target.value })}
+                                            placeholder="Material"
+                                        />
+                                    </div>
+                                    <div className="col-md-3 mb-3">
+                                        <label htmlFor="method">Method</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="method"
+                                            name="method"
+                                            value={currentExam.method}
+                                            onChange={(e) => setCurrentExam({ ...currentExam, method: e.target.value })}
+                                            placeholder="Method"
+                                        />
+                                    </div>
+                                    <div className="col-md-3 mb-3">
+                                        <button type="button" className="btn btn-secondary mt-4" onClick={addExam}>Add Exam</button>
+                                    </div>
                                 </div>
+
+                                {/* Renderização da Lista de Exames */}
+                                <div className="row">
+                                    <div className="col-12">
+                                        <ul className="list-group">
+                                            {equipment.exams.map((exam, index) => (
+                                                <InterfaceExams
+                                                    key={index}
+                                                    exam={exam}
+                                                    index={index}
+                                                    removeExam={removeExam}
+                                                />
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            
+                               
+
+                                {/* Botões de ação */}
                                 <div className="row mt-4">
-                                    <div className="col-sm-3">
+                                    <div className="col-sm-6">
                                         <button className="btn btn-primary mt-2" type="submit">
                                             {isEditing ? 'Update Equipment' : 'Create Equipment'}
                                         </button>
