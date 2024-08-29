@@ -1,67 +1,55 @@
-const Sequelize = require('sequelize');
-const database = require('../db');
+const mongoose = require('mongoose');
+const Patient = require('./patientModel');
 
-const OrderModel = database.define('orders', {
-    id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        allowNull: false,
-        primaryKey: true
-    },
-    automationId: Sequelize.INTEGER,
-    symbol: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    orderId: {
-        type: Sequelize.BIGINT,
-        allowNull: false
-    },
-    clientOrderId: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    transactTime: {
-        type: Sequelize.BIGINT,
-        allowNull: false
-    },
-    type: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    side: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    status: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    isMaker: Sequelize.BOOLEAN,
-    limitPrice: Sequelize.STRING,
-    stopPrice: Sequelize.STRING,
-    avgPrice: Sequelize.DECIMAL(18, 8),
-    commission: Sequelize.STRING,
-    net: Sequelize.DECIMAL(18, 8),
-    quantity: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    icebergQty: Sequelize.STRING,
-    obs: Sequelize.STRING,
-    createdAt: Sequelize.DATE,
-    updatedAt: Sequelize.DATE
-}, {
-    indexes: [{
-        unique: true,
-        fields: ['clientOrderId', 'orderId']
-    }, {
-        fields: ['symbol']
-    }]
-})
+const Schema = mongoose.Schema;
 
-OrderModel.belongsTo(AutomationModel, {
-    foreignKey: 'automationId'
-})
+const orderSchema = new mongoose.Schema({
 
-module.exports = OrderModel;
+    patient: Patient.patientSchema,
+    
+    barCode: {
+        type: String
+    },
+
+    material: {
+        type: String,
+        required: true
+    },
+
+    exams:[],
+
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',  // Referência ao modelo User
+        required: true
+    },
+
+    status:{
+        type: String,
+        enum: ['PENDENT', 'WAITING', 'PROCESSING', 'DONE'],
+        required: true
+    },
+
+    urgent: {
+        type: Boolean
+    },
+
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+orderSchema.pre('save', function (next) {
+    this.updatedAt = Date.now();
+    next();
+});
+
+const Order = mongoose.model('Order', orderSchema);
+
+module.exports = {Order, orderSchema};

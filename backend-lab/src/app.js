@@ -6,6 +6,7 @@ const patientsRouter = require('./routers/patientsRouter');
 const observationsRouter = require('./routers/observationsRouter');
 const interfacesRouter = require('./routers/interfacesRouter');
 const partnersRouter = require('./routers/partnersRouter');
+const examsRouter = require('./routers/examsRouter');
 
 
 
@@ -34,6 +35,7 @@ app.get('/logout', authController.doLogout);
 app.use('/patients', isAuthenticated, patientsRouter);
 app.use('/observations', isAuthenticated, observationsRouter);
 app.use('/interfaces', isAuthenticated, interfacesRouter);
+app.use('/exams', isAuthenticated, examsRouter);
 
 
 app.use('/partners', isAuthenticated, isAdmin, partnersRouter);

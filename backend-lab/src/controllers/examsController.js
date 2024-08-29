@@ -1,39 +1,42 @@
-const patientsRepository = require('../repositories/examsRepository');
+const repository = require('../repositories/examsRepository');
 const logger = require('../utils/logger');
 
-async function getPatient(req, res, next) {
-    const { patientId } = req.params;
+const title = 'Exam';
+
+async function createOne(req, res, next) {
+
+    const data = {
+        ...req.body,
+        createdBy: res.locals.userId,  // Adiciona o ID do usuário que enviou a requisição
+    };
+
     try {
-        const patient = await patientsRepository.getPatientById(patientId);
-        if (!patient) {
-            return res.status(404).json({ message: "Patient not found" });
+        const ret = await repository.createOne(data);
+        res.status(201).json(ret);
+    } catch (err) {
+        logger('system', err);
+        res.status(500).json({ message: err.message });
+    }
+}
+
+async function getOne(req, res, next) {
+    const { id } = req.params;
+    try {
+        const ret = await repository.getById(id);
+        if (!ret) {
+            return res.status(404).json({ message: `${title} not found` });
         }
-        res.json(patient);
+        res.json(ret);
     } catch (err) {
         logger('system', err);
         res.status(500).json({ message: err.message });
     }
 }
 
-async function getPatients(req, res, next) {
+async function getAll(req, res, next) {
     try {
-        const patients = await patientsRepository.getPatients();
-        res.json(patients);
-    } catch (err) {
-        logger('system', err);
-        res.status(500).json({ message: err.message });
-    }
-}
-
-async function createPatient(req, res, next) {
-    try {
-        const data = {
-            ...req.body,
-            createdBy: res.locals.userId,  // Adiciona o ID do usuário que enviou a requisição
-        };
-    
-        const newPatient = await patientsRepository.createPatients(data);
-        res.status(201).json(newPatient);
+        const interfaces = await repository.getAll();
+        res.json(interfaces);
     } catch (err) {
         logger('system', err);
         res.status(500).json({ message: err.message });
@@ -42,16 +45,16 @@ async function createPatient(req, res, next) {
 
 
 
-async function updatePatient(req, res, next) {
-    const { patientId } = req.params;
+async function updateOne(req, res, next) {
+    const { id } = req.params;
     try {
-        const updatedPatient = await patientsRepository.updatePatient(patientId, req.body);
+        const update = await repository.updateOne(id, req.body);
 
-        if (!updatedPatient.success){
-            return res.status(404).json({ message: updatedPatient.error });
+        if (!update.success){
+            return res.status(404).json({ message: update.error });
         }
 
-        res.status(200).json(updatedPatient.data);
+        res.status(200).json(update.data);
 
     } catch (err) {
         logger('system', err);
@@ -59,40 +62,26 @@ async function updatePatient(req, res, next) {
     }
 }
 
-async function deletePatient(req, res, next) {
-    const { patientId } = req.params;
+async function deleteOne(req, res, next) {
+    const { id } = req.params;
     try {
-        const deletedPatient = await patientsRepository.deletePatient(patientId);
-        if (!deletedPatient) {
-            return res.status(404).json({ message: "Patient not found" });
+        const deleted = await repository.deleteOne(patientId);
+        if (!deleted) {
+            return res.status(404).json({ message: `${title} not found`});
         }
-        res.json({ message: "Patient deleted successfully" });
+        res.json({ message: `${title} deleted successfully` });
     } catch (err) {
         logger('system', err);
         res.status(500).json({ message: err.message });
     }
 }
 
-async function getPatientByEmail(req, res, next) {
-    const { email } = req.params;
-    try {
-        const patient = await patientsRepository.getPatientByEmail(email);
-        if (!patient) {
-            return res.status(404).json({ message: "Patient not found" });
-        }
-        res.json(patient);
-    } catch (err) {
-        logger('system', err);
-        res.status(500).json({ message: err.message });
-    }
-}
 
 
 module.exports = {
-    getPatient,
-    getPatients,
-    createPatient,
-    updatePatient,
-    deletePatient,
-    getPatientByEmail
+    createOne,
+    getOne,
+    updateOne,
+    deleteOne,
+    getAll
 };

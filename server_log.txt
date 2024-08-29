@@ -1,17 +1,17 @@
+2024-08-28T22:57:42.880Z 	EQP 	MSH|^~&|||||20240828151212||QRY^Q02|1|P|2.3.1||||||ASCII|||
+QRD|20240828151212|R|D|12|||RD|004|OTH|||T|
+QRF||||||RCT|COR|ALL||
 -----------------------------------------------
-2024-08-23T20:30:48.303Z 	EQP 	MSH|^~&|SendingAPP|Sender Facility|Receiving APP|Receiving Facility|20220124014108^S|NO SECURITY|QRY^Q01|2022012401410800828|T|2.3|000000000611811||AL|
-QRD|||||||111||||
-QRF|1|O
------------------------------------------------
-2024-08-23T20:30:48.307Z 	LIS 	MSH|^~&|Receiving APP|Receiving Facility|SendingAPP|Sender Facility|20220124014108^S|NO SECURITY|QCK^Q02|2022012401410800828|T|2.3|000000000611811||AL|
-MSAA|AA|2022012401410800828|Mensagem Aceita||||0|
+2024-08-28T22:57:42.881Z 	LIS 	MSH|^~&|||||20240828151212||QCK^Q03|1|P|2.3.1||||||ASCII|||
+MSAA|AA|1|Mensagem Aceita||||0|
 ERR|0|
 QAK|SR|OK|
 
 -----------------------------------------------
-2024-08-23T20:30:48.310Z 	LIS 	MSH|^~&|Receiving APP|Receiving Facility|SendingAPP|Sender Facility|20240823203048|NO SECURITY|ACK^Q03|2022012401410800828|T|2.3|000000000611811||AL|
-QRD|||||||111||||
-QRF|1|O
+-----------------------------------------------
+2024-08-28T22:57:42.883Z 	LIS 	MSH|^~&|||||20240828225742||DSR^Q04|1|P|2.3.1||||||ASCII|||
+QRD|20240828151212|R|D|12|||RD|004|OTH|||T|
+QRF||||||RCT|COR|ALL||
 DSP|1||HOSPITAL|||
 DSP|2||1|||
 DSP|3||ROBERTO|||
@@ -31,9 +31,9 @@ DSP|17|||||
 DSP|18|||||
 DSP|19|||||
 DSP|20|||||
-DSP|21||111|||
+DSP|21||RD|||
 DSP|22||1|||
-DSP|23||20240823203048|||
+DSP|23||20240828225742|||
 DSP|24||N|||
 DSP|25|||||
 DSP|26||serum|||
@@ -43,4 +43,3 @@ DSP|29|BOB||||
 DSP|30|FFF||||
 DSP|31|KKK||||
 DSC||
------------------------------------------------

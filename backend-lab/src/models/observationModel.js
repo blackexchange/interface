@@ -101,4 +101,4 @@ observationSchema.pre('save', function (next) {
 
 const Observation = mongoose.model('Observation', observationSchema);
 
-module.exports = Observation;
+module.exports = {Observation, observationSchema};

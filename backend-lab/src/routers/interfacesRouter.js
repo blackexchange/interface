@@ -9,7 +9,7 @@ router.get('/', interfacesController.getInterfaces);
 router.post('/', interfacesController.createInterface);
 
 // Rota para obter um paciente específico por ID
-router.get('/:id', interfacesController.getInterfaces);
+router.get('/:id', interfacesController.getInterface);
 
 // Rota para atualizar um paciente existente
 router.put('/:id', interfacesController.updateInterface);

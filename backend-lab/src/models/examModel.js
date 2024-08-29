@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 
 const examSchema = new mongoose.Schema({
     
-    codes: [{
+    code: String,
+
+    externalCodes: [{
         system: String,
         code: String
     }],
@@ -64,12 +66,11 @@ const examSchema = new mongoose.Schema({
         default: Date.now
     }
 });
-examSchema.path('code').index({unique:true});
 examSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
 
-const Interface = mongoose.model('Interface', examSchema);
+const Exam = mongoose.model('Exam', examSchema);
 
-module.exports = {Interface, examSchema};
+module.exports = {Exam, examSchema};

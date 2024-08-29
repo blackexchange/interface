@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const userRepository = require('../repositories/usersRepository');
+const examsRepository = require('../repositories/examsRepository');
 
 
 async function doLogin (req,res, next){
@@ -14,10 +15,12 @@ async function doLogin (req,res, next){
         const isValid = bcrypt.compareSync(password, user.password);
         
         if (isValid){
+            const exams = await examsRepository.getByCondition({createdBy:user.id});
+
             const token = jwt.sign({id:user.id,profile:user.profile, name:user.name},process.env.JWT_SECRET,{
                 expiresIn: parseInt(process.env.JWT_EXPIRES)            
             })
-            res.json({token});
+            res.json({token,data:[{exams:exams}]});
         }
     }
     

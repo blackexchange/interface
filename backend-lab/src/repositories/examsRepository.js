@@ -1,25 +1,25 @@
-const {Order} = require('../models/orderModel');
+const {Exam} = require('../models/examModel');
 
-const title = 'Order';
+const title = 'Exam';
 
 function createOne(obj, session) {
-    return Order.insertMany(obj, { session });
+    return Exam.insertMany(obj, { session });
 }
 
 function getAll() {
-    return Order.find().exec();
+    return Exam.find().exec();
 }
 
 function deleteOne(id, session) {
-    return Order.findByIdAndDelete(id).session(session).exec();
+    return Exam.findByIdAndDelete(id).session(session).exec();
 }
 
 function getByCondition(condition) {
-    return Order.find(condition).exec();
+    return Exam.find(condition).exec();
 }
 
 function getById(id) {
-    return Order.findById(id).exec();
+    return Exam.findById(id).exec();
 }
 
 
@@ -27,7 +27,7 @@ function getById(id) {
 async function updateOne(id, newObj) {
     try {
         // Encontrar o paciente pelo ID e atualizar com os novos dados
-        const update = await Order.findOneAndUpdate(
+        const update = await Exam.findOneAndUpdate(
             { _id: id }, // Filtro para encontrar o paciente pelo ID
             { $set: newObj }, // Atualizar os campos com os novos dados
             { new: true } // 'new: true' retorna o documento atualizado
