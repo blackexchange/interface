@@ -15,7 +15,7 @@ function ExamSelector({ onAddExam, examsList }) {
         if (searchTerm.trim()) {
             const localExams = getLocalExams(); // Sempre busca a lista completa
             const filtered = localExams.filter(exam =>
-                exam.name.toLowerCase().includes(searchTerm.toLowerCase())
+                exam.name.toLowerCase().includes(searchTerm.toLowerCase()) || exam.code.toLowerCase().includes(searchTerm.toLowerCase())
             );
             setFilteredExams(filtered);
         } else {
@@ -23,11 +23,16 @@ function ExamSelector({ onAddExam, examsList }) {
         }
     }, [searchTerm]);
 
+
+
+
     function handleAddExam() {
         if (selectedExam && !examsList.some(e => e._id === selectedExam._id)) {
+            
             onAddExam(selectedExam);
             setSelectedExam(null); // Limpa o exame selecionado após adicionar
             setSearchTerm(''); // Limpa o campo de busca após adicionar
+            setFilteredExams([]); // Limpa a lista de exames
         }
     }
 

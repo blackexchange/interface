@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { searchPatients } from '../../services/PatientsService';
 
-function SelectPatient({ token, onSelectPatient }) {
+function SelectPatient({ token, onSelectPatient, selectedPatient }) {
     const [query, setQuery] = useState('');
     const [patients, setPatients] = useState([]);
+
+    // Quando selectedPatient mudar, atualiza o campo de busca
+    useEffect(() => {
+        if (selectedPatient) {
+            setQuery(selectedPatient.name); // Exibe o nome do paciente selecionado
+        }
+    }, [selectedPatient]);
 
     function handleSearchChange(event) {
         setQuery(event.target.value);

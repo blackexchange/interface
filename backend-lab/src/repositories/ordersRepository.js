@@ -18,6 +18,7 @@ function getByCondition(condition) {
     return Order.find(condition).exec();
 }
 
+
 function getById(id) {
     return Order.findById(id).exec();
 }

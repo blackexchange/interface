@@ -6,6 +6,7 @@ import ExamSelector from '../../components/ExamSelector/ExamSelector';
 import Menu from '../../components/Menu/Menu';
 import Footer from '../../components/Footer/Footer';
 import Toast from '../../components/Toast/Toast';
+import { generateSampleNumber } from '../../services/LocalServices';
 
 function OrderForm({ examsList }) {
     const [order, setOrder] = useState({
@@ -23,6 +24,8 @@ function OrderForm({ examsList }) {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
 
+   // const [currentExam, setCurrentExam] = useState({ _id:'',code: '', name:''});
+
     useEffect(() => {
         if (id) {
             setIsEditing(true);
@@ -36,6 +39,7 @@ function OrderForm({ examsList }) {
     }, [id, token]);
 
     function handleInputChange(event) {
+        
         const { name, value } = event.target;
         setOrder(prevState => ({ ...prevState, [name]: value }));
     }
@@ -44,7 +48,20 @@ function OrderForm({ examsList }) {
         setOrder(prevState => ({ ...prevState, patient }));
     }
 
+    function addExam(currentExam) {
+        setOrder(prevState => ({
+            ...prevState,
+            exams: [...prevState.exams, currentExam],
+        }));
+
+     
+        //setCurrentExam({ _id:'', code: '', name: '' });
+    }
+
+
+/*
     function handleAddExam(exam) {
+        console.log(order.exams)
         if (!order.exams.some(e => e._id === exam._id)) {
             setOrder(prevState => ({
                 ...prevState,
@@ -52,6 +69,7 @@ function OrderForm({ examsList }) {
             }));
         }
     }
+*/
 
     function handleRemoveExam(index) {
         setOrder(prevState => ({
@@ -73,6 +91,7 @@ function OrderForm({ examsList }) {
                     setNotification({ type: 'error', text: 'Failed to update order' });
                 });
         } else {
+            
             createOne(token, order)
                 .then(() => {
                     setNotification({ type: 'success', text: 'Order created successfully' });
@@ -98,36 +117,19 @@ function OrderForm({ examsList }) {
                     <div className="col-12">
                         <div className="card card-body border-0 shadow mb-4">
                             <form onSubmit={handleSubmit}>
-                                <SelectPatient token={token} onSelectPatient={handlePatientSelect} />
+                                <SelectPatient token={token} 
+                                onSelectPatient={handlePatientSelect} 
+                                selectedPatient={order.patient}
+ 
+                                />
 
-                                <div className="mb-3">
-                                    <label htmlFor="barCode">Bar Code</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        id="barCode"
-                                        name="barCode"
-                                        value={order.barCode}
-                                        onChange={handleInputChange}
-                                    />
-                                </div>
+                                
 
-                                <div className="mb-3">
-                                    <label htmlFor="material">Material</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        id="material"
-                                        name="material"
-                                        value={order.material}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                </div>
+                                
 
                                 <ExamSelector
                                     examsList={order.exams}
-                                    onAddExam={handleAddExam}
+                                    onAddExam={addExam}
                                 />
 
                                 {order.exams.length > 0 && (
@@ -150,22 +152,7 @@ function OrderForm({ examsList }) {
                                     </div>
                                 )}
 
-                                <div className="mb-3">
-                                    <label htmlFor="status">Status</label>
-                                    <select
-                                        className="form-control"
-                                        id="status"
-                                        name="status"
-                                        value={order.status}
-                                        onChange={handleInputChange}
-                                        required
-                                    >
-                                        <option value="PENDENT">PENDENT</option>
-                                        <option value="WAITING">WAITING</option>
-                                        <option value="PROCESSING">PROCESSING</option>
-                                        <option value="DONE">DONE</option>
-                                    </select>
-                                </div>
+                              
 
                                 <div className="form-check mb-3">
                                     <input

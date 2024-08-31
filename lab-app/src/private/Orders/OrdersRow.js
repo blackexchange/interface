@@ -1,12 +1,13 @@
 import React from 'react';
+import moment from 'moment';
 
 function OrdersRow({ order, onDelete, navigate }) {
     return (
         <tr>
-            <td>{order.name}</td>
-            <td>{order.customer}</td>
+            <td>{order.patient.name}</td>
+            <td>{moment(order.createdAt).format('DD/MM/YYYY')}</td>
+            <td>{order.exams.map(exam => exam.code).join(', ')}</td>
             <td>{order.status}</td>
-            <td>{order.date}</td>
             <td>
                 <button 
                     className="btn btn-sm btn-warning me-2" 

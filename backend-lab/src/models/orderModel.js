@@ -6,15 +6,6 @@ const Schema = mongoose.Schema;
 const orderSchema = new mongoose.Schema({
 
     patient: Patient.patientSchema,
-    
-    barCode: {
-        type: String
-    },
-
-    material: {
-        type: String,
-        required: true
-    },
 
     exams:[],
 
@@ -27,6 +18,7 @@ const orderSchema = new mongoose.Schema({
     status:{
         type: String,
         enum: ['PENDENT', 'WAITING', 'PROCESSING', 'DONE'],
+        default:'PENDENT',
         required: true
     },
 

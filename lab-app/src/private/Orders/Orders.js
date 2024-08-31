@@ -60,10 +60,10 @@ function Order() {
                                 <table className="table align-items-center table-flush table-sm table-hover tableFixHead">
                                     <thead className="thead-light">
                                         <tr>
-                                            <th className="border-bottom" scope="col">Name</th>
-                                            <th className="border-bottom" scope="col">Customer</th>
-                                            <th className="border-bottom" scope="col">Status</th>
+                                            <th className="border-bottom" scope="col">Patient</th>
                                             <th className="border-bottom" scope="col">Date</th>
+                                            <th className="border-bottom" scope="col">Exams</th>
+                                            <th className="border-bottom" scope="col">Status</th>
                                             <th className="border-bottom" scope="col">Actions</th>
                                         </tr>
                                     </thead>

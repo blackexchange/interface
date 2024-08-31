@@ -89,7 +89,7 @@ function Router() {
                 }/> 
                     <Route path='/exams/edit/:id' element={
                     <PrivateRoute>
-                        <InterfaceForm />
+                        <ExamForm />
                     </PrivateRoute>
                 } />
 
@@ -107,7 +107,7 @@ function Router() {
                 }/> 
                     <Route path='/orders/edit/:id' element={
                     <PrivateRoute>
-                        <InterfaceForm />
+                        <OrderForm />
                     </PrivateRoute>
                 } />
 

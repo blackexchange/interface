@@ -1,5 +1,7 @@
 const ordersRepository = require('../repositories/ordersRepository');
 const logger = require('../utils/logger');
+const {generateSampleNumber} = require('../utils/lab');
+
 
 async function createOne(req, res, next) {
 
@@ -7,6 +9,22 @@ async function createOne(req, res, next) {
         ...req.body,
         createdBy: res.locals.userId,  // Adiciona o ID do usuário que enviou a requisição
     };
+    
+    // Gera o código de barras para cada exame com base no código do exame ou ID do paciente
+    const examsData = data.exams.map(exam => {
+        const composition = res.locals.userId + data.patient._id;
+        const barcode = generateSampleNumber(composition); // Baseia o código de barras no ID do paciente
+
+        return {
+            ...exam,
+            barCode: barcode // Adiciona o código de barras ao exame
+        };
+    });
+    
+    
+    // Atualiza a lista de exames no objeto `data` com os códigos de barras gerados
+    data.exams = examsData;
+    
 
     try {
         const newOrder = await ordersRepository.createOne(data);
@@ -20,7 +38,7 @@ async function createOne(req, res, next) {
 async function getOne(req, res, next) {
     const { id } = req.params;
     try {
-        const ret = await ordersRepository.getOne(id);
+        const ret = await ordersRepository.getById(id);
         if (!ret) {
             return res.status(404).json({ message: "Order not found" });
         }
