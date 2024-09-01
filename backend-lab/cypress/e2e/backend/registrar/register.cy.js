@@ -11,7 +11,7 @@ describe('Teste Automatizado: API Contratante', () => {
            url:  `${url}/register`,
            body: {
              "name":"Rodney",
-             "email": "maza@ig.com",
+             "email": "ig@ig.com",
              "password":"12345"
           }
             
@@ -30,7 +30,7 @@ describe('Teste Automatizado: API Contratante', () => {
           url:  `${url}/register`,
           body: {
             "name":"Rodney",
-            "email": "rodney1@ig.com",
+            "email": "ig@ig.com",
             "password":"12345"
          }
            

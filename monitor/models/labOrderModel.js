@@ -1,14 +1,10 @@
 const mongoose = require('mongoose');
-const Patient = require('./patientModel');
 
 const Schema = mongoose.Schema;
 
 const orderSchema = new mongoose.Schema({
 
-    patient: Patient.patientSchema,
     orders:[],
-
-    exams:[],
 
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -43,6 +39,6 @@ orderSchema.pre('save', function (next) {
     next();
 });
 
-const Order = mongoose.model('Order', orderSchema);
+const LabOrder = mongoose.model('Order', orderSchema);
 
-module.exports = {Order, orderSchema};
+module.exports = {LabOrder, orderSchema};

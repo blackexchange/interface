@@ -5,7 +5,7 @@ require('dotenv').config();
 const moment = require('moment');
 moment.locale('pt-br');
 
-const userId = process.env.USER; 
+const userId = process.env.USER_MONITOR; 
 const minutsBefore = parseInt(process.env.MINUTES_BEFORE) || 2;
 const hoursBefore =  parseInt(process.env.HOURS_BEFORE) || 24;
 

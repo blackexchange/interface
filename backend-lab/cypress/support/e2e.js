@@ -1,9 +1,9 @@
 
 import './commands'
 
-Cypress.env('URL', 'http://localhost:3000');
+Cypress.env('URL', 'http://localhost:3001');
 
 before(() => {
-    cy.loginApi('rodney1@ig.com','12345');
+    cy.loginApi('ig@ig.com','12345');
 
 });

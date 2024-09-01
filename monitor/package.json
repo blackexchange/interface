@@ -4,7 +4,9 @@
   "main": "agent.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "pm2": "pm2 start agent.js --name='TimerJob'"
+    "pm2": "pm2 start agent.js --name='TimerJob'",
+    "dev": "npx nodemon -r dotenv/config ./agent"
+
   },
   "author": "",
   "license": "ISC",

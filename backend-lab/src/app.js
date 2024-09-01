@@ -8,6 +8,7 @@ const interfacesRouter = require('./routers/interfacesRouter');
 const partnersRouter = require('./routers/partnersRouter');
 const examsRouter = require('./routers/examsRouter');
 const ordersRouter = require('./routers/ordersRouter');
+const labOrdersRouter = require('./routers/labOrdersRouter');
 
 
 
@@ -38,6 +39,7 @@ app.use('/observations', isAuthenticated, observationsRouter);
 app.use('/interfaces', isAuthenticated, interfacesRouter);
 app.use('/exams', isAuthenticated, examsRouter);
 app.use('/orders', isAuthenticated, ordersRouter);
+app.use('/laborders', isAuthenticated, labOrdersRouter);
 
 
 app.use('/partners', isAuthenticated, isAdmin, partnersRouter);
