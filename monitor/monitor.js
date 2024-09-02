@@ -1,5 +1,4 @@
-const ordersRepository = require('./repositories/ordersRepository');
-const { ObjectId } = require('mongodb');
+const LabOrders = require('./repositories/labOrdersRepository');
 
 require('dotenv').config();
 const moment = require('moment');
@@ -20,9 +19,17 @@ class Monitor {
 
         // Subtraindo 1 dia da data que está em 'dateUntil' para definir 'dateFrom'
         const dateFrom = moment(dateUntil).subtract(hoursBefore, 'hours').format('YYYY-MM-DD HH:mm:ss');
+        try{
+            const ret = await LabOrders.getInterfaceData(dateFrom, dateUntil, userId, 'PENDENT');
+            console.log(JSON.stringify(ret))
 
+        } catch (err) {
+            console.log(err.message);
+        }
+
+/*
         try {
-            const orders = await ordersRepository.getByCondition({
+            const orders = await labOrders.getByCondition({
                 status: 'PENDENT',
                 createdBy: new ObjectId(userId),
                 createdAt: {
@@ -41,22 +48,22 @@ class Monitor {
         } catch (err) {
             console.log(err.message);
         }
+        */
     }
-
     // Torna o método estático para ser acessado pela classe
     static async sendToInterface(data) {
 
-        const order = await Order.findById(orderId).populate('patient');
+        const order = await labOrders.findById(orderId).populate('patient');
         if (!order) {
             throw new Error('Order not found');
         }
 
-        const ret = await ordersRepository.createOne(data);
+        const ret = await labOrders.createOne(data);
         console.log(`Inserted: ${ret}`);
     }
 
     static async insertObservations(data) {
-        const ret = await ordersRepository.getInterfaceData(data);
+        const ret = await labOrders.getInterfaceData(data);
        // console.log(`Inserted: ${ret}`);
     }
 

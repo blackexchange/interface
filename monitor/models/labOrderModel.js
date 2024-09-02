@@ -1,10 +1,25 @@
 const mongoose = require('mongoose');
+const Patient = require('./patientModel');
 
 const Schema = mongoose.Schema;
 
 const orderSchema = new mongoose.Schema({
 
-    orders:[],
+    orders:[
+        {
+            orderId: String,
+            patient: Patient.patientSchema,
+            orderItens:[
+                {
+                    itemId: String,
+                    examCode: String,
+                    codBar: String,
+                    material: String
+                }
+            ],
+        },
+
+    ],
 
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -16,11 +31,6 @@ const orderSchema = new mongoose.Schema({
         type: String,
         enum: ['PENDENT', 'WAITING', 'PROCESSING', 'DONE'],
         default:'PENDENT',
-        
-    },
-
-    urgent: {
-        type: Boolean
     },
 
     createdAt: {
@@ -39,6 +49,7 @@ orderSchema.pre('save', function (next) {
     next();
 });
 
-const LabOrder = mongoose.model('Order', orderSchema);
+
+const LabOrder = mongoose.model('LabOrder', orderSchema);
 
 module.exports = {LabOrder, orderSchema};

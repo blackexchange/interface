@@ -57,6 +57,104 @@ async function updateOne(id, newObj) {
         };
     }
 }
+
+async function getInterfaceData(dateFrom, dateUntil, userId, status) {
+   // console.log(orders)
+
+   const userObjId =  new  ObjectId(userId);
+   
+   const ret = await LabOrder.aggregate(
+    [
+      {
+        $match: {
+          status: status,
+          createdBy: userObjId,
+          createdAt: {
+            $gt: new Date(
+              dateFrom
+            ),
+            $lte: new Date(
+              dateUntil
+            )
+          }
+        }
+      },
+      { $unwind: '$orders' },
+      { $unwind: '$orders.orderItens' },
+      {
+        $lookup: {
+          from: 'interfaces',
+          let: {
+            examCode: '$orders.orderItens.examCode'
+          },
+          pipeline: [
+            { $unwind: '$exams' },
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$exams.code', '$$examCode']
+                }
+              }
+            }
+          ],
+          as: 'matchingInterfaces'
+        }
+      },
+      {
+        $match: { matchingInterfaces: { $ne: [] } }
+      },
+      {
+        $group: {
+          _id: {
+            orderId: '$orders.orderId',
+            examCode: '$orders.orderItens.examCode'
+          },
+          patient: { $first: '$orders.patient' },
+          orderItens: {
+            $push: '$orders.orderItens'
+          },
+          status: { $first: '$status' },
+          createdBy: { $first: '$createdBy' },
+          createdAt: { $first: '$createdAt' },
+          interfaces: {
+            $first: '$matchingInterfaces'
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$interfaces._id',
+          interfaceDetails: {
+            $first: '$interfaces'
+          },
+          orders: {
+            $push: {
+              orderId: '$_id.orderId',
+              patient: '$patient',
+              orderItens: '$orderItens',
+              status: '$status',
+              createdBy: '$createdBy',
+              createdAt: '$createdAt'
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          interface: '$interfaceDetails',
+          orders: 1
+        }
+      }
+    ],
+    { maxTimeMS: 60000, allowDiskUse: true }
+  ).exec();
+
+
+  return ret;
+        
+ }
+ 
  
 module.exports = {
     createOne,
