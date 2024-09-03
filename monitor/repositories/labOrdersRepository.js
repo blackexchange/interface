@@ -1,6 +1,7 @@
 const {LabOrder} = require('../models/labOrderModel');
 const {Patient} = require('../models/patientModel');
 const {Interface} = require('../models/interfaceModel');
+const {LabQueue} = require('../models/labQueueModel');
 const { ObjectId } = require('mongodb');
 
 
@@ -58,6 +59,36 @@ async function updateOne(id, newObj) {
     }
 }
 
+async function updateStatus(orderIds) {
+  try {
+      // Encontrar o paciente pelo ID e atualizar com os novos dados
+      const update = await LabOrder.updateMany(
+        { "orders._id": { $in: orderIds } }, // Filtro: apenas os documentos com _id na lista
+        { $set: { status: "QUEUE" } } // Atualização: define o novo status
+      ).exec();
+
+      if (!update) {
+          // Se nenhum paciente foi encontrado, retornar uma mensagem de erro
+          return {
+              success: false,
+              error: `${title} not found.`
+          };
+      }
+
+      // Retornar um objeto indicando sucesso
+      return {
+          success: true,
+          data: update
+      };
+  } catch (error) {
+      // Retornar um objeto indicando erro
+      return {
+          success: false,
+          error: error.message
+      };
+  }
+}
+
 async function getInterfaceData(dateFrom, dateUntil, userId, status) {
    // console.log(orders)
 
@@ -106,43 +137,35 @@ async function getInterfaceData(dateFrom, dateUntil, userId, status) {
       {
         $group: {
           _id: {
-            orderId: '$orders.orderId',
-            examCode: '$orders.orderItens.examCode'
+            examCode: "$orders.orderItens.examCode"
           },
-          patient: { $first: '$orders.patient' },
-          orderItens: {
-            $push: '$orders.orderItens'
+          orders: {
+            $addToSet: {
+              orderId: "$orders._id",
+              patient: "$orders.patient",
+              item: "$orders.orderItens" // Adiciona cada orderInternal ao conjunto
+            }
           },
-          status: { $first: '$status' },
-          createdBy: { $first: '$createdBy' },
-          createdAt: { $first: '$createdAt' },
           interfaces: {
-            $first: '$matchingInterfaces'
+            $first: "$matchingInterfaces"
           }
         }
       },
       {
         $group: {
-          _id: '$interfaces._id',
+          _id: "$interfaces._id",
           interfaceDetails: {
-            $first: '$interfaces'
+            $first: "$interfaces"
           },
           orders: {
-            $push: {
-              orderId: '$_id.orderId',
-              patient: '$patient',
-              orderItens: '$orderItens',
-              status: '$status',
-              createdBy: '$createdBy',
-              createdAt: '$createdAt'
-            }
+            $first: "$orders"
           }
         }
       },
       {
         $project: {
           _id: 0,
-          interface: '$interfaceDetails',
+          interfaces: "$interfaceDetails",
           orders: 1
         }
       }
@@ -163,5 +186,6 @@ module.exports = {
     updateOne,
     getById,
     getByCondition,
-    getInterfaceData
+    getInterfaceData,
+    updateStatus
 };
