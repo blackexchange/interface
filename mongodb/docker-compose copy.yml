@@ -1,0 +1,53 @@
+services:
+  mongo1:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Apontando para o Dockerfile criado
+    container_name: mongo1
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - ./data/mongo1:/data/db
+      - ./secrets/mongo-keyfile:/etc/secrets/mongo-keyfile
+    ports:
+      - "27017:27017"
+    networks:
+      - mongo-cluster
+
+  mongo2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mongo2
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./data/mongo2:/data/db
+      - ./secrets/mongo-keyfile:/etc/secrets/mongo-keyfile
+    networks:
+      - mongo-cluster
+
+  mongo3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mongo3
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      - "27019:27017"
+       
+    volumes:
+      - ./data/mongo3:/data/db
+      - ./secrets/mongo-keyfile:/etc/secrets/mongo-keyfile
+    networks:
+      - mongo-cluster
+
+networks:
+  mongo-cluster:
+    driver: bridge

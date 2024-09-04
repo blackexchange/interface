@@ -1,7 +1,4 @@
 const {LabOrder} = require('../models/labOrderModel');
-const {Patient} = require('../models/patientModel');
-const {Interface} = require('../models/interfaceModel');
-const {LabQueue} = require('../models/labQueueModel');
 const { ObjectId } = require('mongodb');
 
 

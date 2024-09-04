@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"5d85d64513a943a0a7b341fef31e996f","collectionName":"labqueues","type":"collection"}

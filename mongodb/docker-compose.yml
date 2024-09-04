@@ -1,14 +1,56 @@
 services:
-  mongo:
+  mongo1:
     image: mongo:latest
-    container_name: my_mongo
+    container_name: mongo1
+    hostname: mongo1
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - mongo1_data:/data/db
+      - ./secrets/mongo-keyfile:/etc/mongo-keyfile:ro
+    networks:
+      - mongo-cluster
+    command: bash -c "mongod --replSet rs0 --bind_ip localhost,mongo1 --keyFile /etc/mongo-keyfile"
+
+  mongo2:
+    image: mongo:latest
+    container_name: mongo2
+    hostname: mongo2
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo2_data:/data/db
+      - ./secrets/mongo-keyfile:/etc/mongo-keyfile:ro
+    networks:
+      - mongo-cluster
+    command: bash -c "mongod --replSet rs0 --bind_ip localhost,mongo2 --keyFile /etc/mongo-keyfile"
+
+  mongo3:
+    image: mongo:latest
+    container_name: mongo3
+    hostname: mongo3
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongo3_data:/data/db
+      - ./secrets/mongo-keyfile:/etc/mongo-keyfile:ro
+    networks:
+      - mongo-cluster
+    command: bash -c "mongod --replSet rs0 --bind_ip localhost,mongo3 --keyFile /etc/mongo-keyfile"
 
 volumes:
-  mongo_data:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
+
+networks:
+  mongo-cluster:

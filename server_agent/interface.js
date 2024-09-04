@@ -15,15 +15,6 @@ const interfaceSchema = new mongoose.Schema({
         required:true,
         unique: true
     },
-    devices:[
-        { deviceId: { type: String, required: true }},
-        { ip: { type: String, required: true }},
-        { port: { type: Number, required: true }},
-        { type: { type: String, required: true, enum: ['TCP', 'FILE', 'SERIAL'] }},
-        { details: { type: String }},
-        { status: { type: String, default: 'inactive', enum: ['active', 'inactive'] }}
-            
-    ],
 
     area:{
         type: String,
@@ -63,6 +54,13 @@ const interfaceSchema = new mongoose.Schema({
         type:String, 
         enum: ["1","2","3"]
     },
+    devices:[
+        {deviceId: { type: String, required: true }},
+        {ip: { type: String, required: true }},
+        {port: { type: String, required: true }},
+        {protocol: { type: String, required: true }},
+        {status: { type: String, required: true, enum: ['active', 'inactive'] }}
+    ],
 
     exams:[{
         name:String, 
