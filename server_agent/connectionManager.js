@@ -2,7 +2,9 @@ const net = require('net');
 const { Interface } = require('./interface');
 
 // Função para abrir portas para todos os dispositivos da interface
-function openPortForDevice(device) {
+function openPortForDevice(device, retryCount = 0) {
+  const MAX_RETRIES = 5; // Defina um limite de tentativas para evitar loops infinitos
+
   console.log(`Abrindo porta para o dispositivo: ${device.deviceId}`);
 
   // Criando o servidor TCP
@@ -35,12 +37,19 @@ function openPortForDevice(device) {
     console.error(`Erro ao abrir a porta para ${device.deviceId} (${device.ip}:${device.port}): ${err.message}`);
 
     if (err.code === 'EADDRINUSE') {
+      if (retryCount >= MAX_RETRIES) {
+        console.error(`Falha ao abrir a porta após ${MAX_RETRIES} tentativas para ${device.deviceId}. Abortando.`);
+        return;
+      }
+
       console.error(`Porta ${device.port} já está em uso para o dispositivo ${device.deviceId}. Tentando novamente...`);
 
       // Tentando novamente após 1 segundo
       setTimeout(() => {
-        server.close(); // Fecha o servidor anterior
-        server.listen(device.port, device.ip);
+        server.close(() => {
+          console.log(`Servidor fechado para ${device.deviceId}. Tentando reabrir a porta...`);
+          openPortForDevice(device, retryCount + 1); // Incrementa o contador de tentativas
+        });
       }, 1000);
     }
   });
@@ -53,7 +62,6 @@ async function manageConnections() {
   try {
     // Buscando todas as interfaces com dispositivos ativos
     const activeInterfaces = await Interface.find({ 'devices.status': 'active' }).exec();
-
     if (activeInterfaces.length === 0) {
       console.log("Nenhuma interface ativa encontrada.");
       return;
