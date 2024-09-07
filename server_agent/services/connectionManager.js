@@ -2,71 +2,65 @@ const net = require('net');
 const { Interface } = require('../models/interfaceModel');
 const { dispatchProtocol } = require('../utils/protocolDispatcher');
 
-// Função para abrir portas para todos os dispositivos da interface
-function openPortForDevice(device, retryCount = 0) {
 
+function openPortForDevice(device, name) {
   const protocolProcessor = dispatchProtocol(device);
 
-  console.log(protocolProcessor)
-  
-  // Seleciona o módulo de protocolo uma vez na abertura da porta
-  const MAX_RETRIES = 5; // Defina um limite de tentativas para evitar loops infinitos
+  const server = net.createServer((socket) => handleDeviceConnection(socket, protocolProcessor, device));
 
-  console.log(`Abrindo porta para o dispositivo: ${device.deviceId}`);
 
-  // Criando o servidor TCP
-  const server = net.createServer((socket) => {
-    console.log(`Dispositivo conectado: ${device.deviceId}`);
-
-    /*
-    // Tratando dados recebidos do dispositivo
-    socket.on('data', (data) => {
-      console.log(`Dados recebidos de ${device.deviceId}: ${data}`);
-
-      
-      ret = protocolProcessor.processData(data)
-      socket.write(ret)
-     // dispatchProtocol(data, device);
-    });
-*/
-    // Quando o dispositivo se desconectar
-    socket.on('end', () => {
-      console.log(`Dispositivo desconectado: ${device.deviceId}`);
-    });
-
-    // Tratando erros de socket
-    socket.on('error', (err) => {
-      console.error(`Erro de socket no dispositivo ${device.deviceId}: ${err.message}`);
-    });
+  server.listen(device, name, () => {
+      console.log(`${name}/${device.protocol} escutando em ${device.ip}:${device.port}`);
   });
 
-  // Tentando escutar na porta especificada
-  server.listen(device.port, device.ip, () => {
-    console.log(`Escutando em ${device.ip}:${device.port}`);
-  });
-
-  // Tratando erros do servidor (ex: porta já em uso)
   server.on('error', (err) => {
-    console.error(`Erro ao abrir a porta para ${device.deviceId} (${device.ip}:${device.port}): ${err.message}`);
-
-    if (err.code === 'EADDRINUSE') {
-      if (retryCount >= MAX_RETRIES) {
-        console.error(`Falha ao abrir a porta após ${MAX_RETRIES} tentativas para ${device.deviceId}. Abortando.`);
-        return;
-      }
-
-      console.error(`Porta ${device.port} já está em uso para o dispositivo ${device.deviceId}. Tentando novamente...`);
-
-      // Tentando novamente após 1 segundo
-      setTimeout(() => {
-        server.close(() => {
-          console.log(`Servidor fechado para ${device.deviceId}. Tentando reabrir a porta...`);
-          openPortForDevice(device, retryCount + 1); // Incrementa o contador de tentativas
-        });
-      }, 1000);
-    }
+      console.error(`Erro ao abrir a porta: ${err.message}`);
   });
 }
+
+ function handleDeviceConnection(socket, protocolProcessor, device) {
+  let buffer = '';  // Armazenar os dados recebidos
+
+  socket.on('data', async (data) => {
+      buffer = data.toString();  // Adiciona os dados ao buffer
+
+     const ret = await protocolProcessor.processData(buffer, device, socket);
+     //console.log('resposta', ret)
+
+     // const response = protocolProcessor(buffer);
+  
+      // Verifica se o final da mensagem foi recebido (usando \x0D como terminador)
+      /*
+      while (buffer.includes('\x0D')) {
+          const messageEndIndex = buffer.indexOf('\x0D');
+          
+          // Extrai a mensagem completa
+          const completeMessage = buffer.slice(0, messageEndIndex);
+          buffer = buffer.slice(messageEndIndex + 1); // Remove a mensagem processada do buffer
+          
+        //  console.log(completeMessage)
+          // Agora processa a mensagem completa
+         // const response = protocolProcessor(completeMessage);
+          
+          // Envia a resposta de volta pelo socket
+          socket.write("ok");
+      }
+      */
+     // socket.write("ok");
+
+  });
+ 
+
+  socket.on('end', () => {
+      console.log('Dispositivo desconectado.');
+  });
+
+  socket.on('error', (err) => {
+      console.error(`Erro de socket: ${err.message}`);
+  });
+}
+
+
 
 // Função para gerenciar conexões para interfaces e dispositivos
 async function manageConnections() {
@@ -92,7 +86,7 @@ async function manageConnections() {
         if (device.status === 'active') {
           // Abrindo a porta para o dispositivo
           try {
-            openPortForDevice(device);
+            openPortForDevice(device,interfaceItem.name);
           } catch (err) {
             console.error(`Erro ao abrir porta para dispositivo ${device.deviceId}: ${err.message}`);
           }

@@ -13,7 +13,7 @@ function dispatchProtocol(device, data) {
 
     if (protocolProcessors[protocol]) {
         //protocolProcessors[protocol].processData(data, device);
-        return protocolProcessors[protocol];
+        return new protocolProcessors[protocol]();
     } else {
         console.error(`Protocolo ${protocol} não é suportado para o dispositivo ${device.deviceId}`);
     }
