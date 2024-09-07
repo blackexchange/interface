@@ -1,10 +1,10 @@
-const { connectToDatabase } = require('./db');
-const {manageConnections} = require('./connectionManager');
-const { monitorNewInterfaces } = require('./changeStreamWatcher');
+const { connectToDatabase } = require('./services/db');
+const {manageConnections} = require('./services/connectionManager');
+const { monitorNewInterfaces } = require('./services/changeStreamWatcher');
 
 (async () => {
     try {
-        console.log('system', 'Starting the agent app...');
+        console.log('system', 'Starting the agent manager...');
 
         // Estabelece a conexão com o MongoDB
         await connectToDatabase();

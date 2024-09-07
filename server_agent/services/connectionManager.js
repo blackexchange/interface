@@ -1,8 +1,15 @@
 const net = require('net');
-const { Interface } = require('./interface');
+const { Interface } = require('../models/interfaceModel');
+const { dispatchProtocol } = require('../utils/protocolDispatcher');
 
 // Função para abrir portas para todos os dispositivos da interface
 function openPortForDevice(device, retryCount = 0) {
+
+  const protocolProcessor = dispatchProtocol(device);
+
+  console.log(protocolProcessor)
+  
+  // Seleciona o módulo de protocolo uma vez na abertura da porta
   const MAX_RETRIES = 5; // Defina um limite de tentativas para evitar loops infinitos
 
   console.log(`Abrindo porta para o dispositivo: ${device.deviceId}`);
@@ -11,11 +18,17 @@ function openPortForDevice(device, retryCount = 0) {
   const server = net.createServer((socket) => {
     console.log(`Dispositivo conectado: ${device.deviceId}`);
 
+    /*
     // Tratando dados recebidos do dispositivo
     socket.on('data', (data) => {
       console.log(`Dados recebidos de ${device.deviceId}: ${data}`);
-    });
 
+      
+      ret = protocolProcessor.processData(data)
+      socket.write(ret)
+     // dispatchProtocol(data, device);
+    });
+*/
     // Quando o dispositivo se desconectar
     socket.on('end', () => {
       console.log(`Dispositivo desconectado: ${device.deviceId}`);
@@ -73,6 +86,7 @@ async function manageConnections() {
       
       // Iterando sobre os dispositivos de cada interface
       interfaceItem.devices.forEach((device) => {
+
         device = device.toObject();
 
         if (device.status === 'active') {

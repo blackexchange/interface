@@ -46,10 +46,7 @@ const interfaceSchema = new mongoose.Schema({
         ]
     },
 
-    protocol: {
-        type: String,
-        enum: ["HL7", "ASTM","OTHERS"]
-    },
+    
     testLevel: {
         type:String, 
         enum: ["1","2","3"]
@@ -58,7 +55,11 @@ const interfaceSchema = new mongoose.Schema({
         {deviceId: { type: String, required: true }},
         {ip: { type: String, required: true }},
         {port: { type: String, required: true }},
-        {protocol: { type: String, required: true }},
+        {mode: { type: String,enum: ["TCP", "SERIAL","FILE"], required: true }},
+        {protocol: {
+            type: String,
+            enum: ["HL7", "ASTM","OTHERS"]
+        }},
         {status: { type: String, required: true, enum: ['active', 'inactive'] }}
     ],
 

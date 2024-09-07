@@ -1,4 +1,4 @@
-const { Interface } = require('./interface'); // Modelo da interface
+const { Interface } = require('../models/interfaceModel'); // Modelo da interface
 const { openPortForDevice } = require('./connectionManager'); // Função que abre as portas
 
 // Função para iniciar o monitoramento de mudanças no MongoDB
