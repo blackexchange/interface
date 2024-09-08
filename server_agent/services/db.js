@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 // URL de conexão com o MongoDB
-//const mongoURI = process.env.MONGO_URI || 'mongodb://admin:admin123@127.0.0.1:27017,127.0.0.1:27018,127.0.0.1:27019/lab?replicaSet=rs0&authSource=admin';
-const mongoURI = process.env.MONGO_URI || 'mongodb://admin:admin123@localhost:27017/lab?replicaSet=rs0&authSource=admin';
+const mongoURI = process.env.MONGO_URI || 'mongodb://admin:admin123@127.0.0.1:27017,127.0.0.1:27018,127.0.0.1:27019/lab?replicaSet=rs0&authSource=admin';
+//const mongoURI = process.env.MONGO_URI || 'mongodb://admin:admin123@localhost:27017/lab?replicaSet=rs0&authSource=admin';
 
 // Configurações de conexão
 const options = {
@@ -17,6 +17,8 @@ const options = {
 // Função de conexão com o MongoDB
 const connectToDatabase = async () => {
     try {
+        console.log('Conectando ao Banco de Dados...');
+
         await mongoose.connect(mongoURI, options);
         console.log('MongoDB connected successfully');
 

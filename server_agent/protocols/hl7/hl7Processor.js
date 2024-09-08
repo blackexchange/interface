@@ -3,8 +3,10 @@ const utils = require('../../utils/utils');
 class HL7Processor {
     constructor() {
         this.socket = null; // Variável de instância para o socket
-        this.msgReturn = [];
+        this.ackMessage = [];
+        this.responseSegments = [];
         this.msgType = null;
+        this.lastHeaderReceived = null;
         this.isProcessing = false;
     }
 
@@ -24,6 +26,9 @@ class HL7Processor {
             if (message.endsWith('\x1C\x0D')) {
                 message = message.substring(0, message.length - 2); // Remove <FS> character
                 await this.processHL7Message(message);
+                await this.processACKMessage();
+                await this.processResponseMessage();
+
             }
         } else {
             message = '';
@@ -37,7 +42,7 @@ class HL7Processor {
         console.log('Mensagem Recebida: ', message);
 
         const segments = message.split('\x0D');
-        const responseSegments = [];
+        //const responseSegments = [];
 
         for (const segment of segments) {
             const fields = segment.split('|');
@@ -46,13 +51,13 @@ class HL7Processor {
             // Use os handlers de segmentos como no exemplo anterior
             switch (segmentType) {
                 case 'MSH':
-                    this.processMSHSegment(fields, responseSegments);
+                    this.processMSHSegment(fields, segment);
                     break;
                 case 'QRD':
-                    await this.processQRDSegment(fields, responseSegments);
+                    await this.processQRDSegment(fields, segment);
                     break;
                 case 'QRF':
-                    await this.processQRFSegment(fields, responseSegments);
+                    await this.processQRFSegment(fields, segment);
                     break;
                 default:
                     console.log(`Unknown segment type: ${segmentType}`);
@@ -61,9 +66,9 @@ class HL7Processor {
         }
 
         // Envie a resposta usando o socket armazenado na instância
-        const responseMessage = this.buildHL7Response(responseSegments);
-        await this.sendResponse(responseMessage);
     }
+    
+
 
     buildHL7Response(segments) {
         return `\x0B${segments.join('\x0D')}\x1C\x0D`;
@@ -79,6 +84,7 @@ class HL7Processor {
     }
 
     processMSHSegment(fields, responseSegments) {
+        this.lastHeaderReceived = responseSegments
         this.msgType = getMessageType(fields.join('|'));
         let segments = fields;
         
@@ -93,11 +99,11 @@ class HL7Processor {
     
         segments[8] = utils.incrementNumericPart(segments[8]);
     
-        header = segments.join("|");
+        //header = segments.join("|");
     
-        responseAck(socket);
-        updateHeader();
-        responseSegments.push(header);
+       // responseAck(socket);
+        //updateHeader();
+        this.responseSegments.push(responseSegments);
     }
 
     async processQRDSegment(fields, responseSegments) {
@@ -107,6 +113,31 @@ class HL7Processor {
     async processQRFSegment(fields, responseSegments) {
         // Processamento do segmento QRD
     }
+
+    
+    processACKMessage() {
+        console.log('Confirmando recebimento...');
+        const id = header.split('|')[9];
+
+        const ack = '\x0B' + header + '\x0D' +
+                    'MSAA|AA|' + id + '|Mensagem Aceita||||0|' + '\x0D' +
+                    'ERR|0|' + '\x0D' + 
+                    'QAK|SR|OK|' + '\x0D\x1C\x0D';
+
+        utils.logMessage(ack, 'LIS');
+        this.socket.write(ack);
+    }
+
+    processResponseMessage() {
+        if (this.responseSegments.length > 0){
+
+            const responseMessage = buildHL7Response(this.responseSegments);
+            this.sendResponse(responseMessage);
+
+        }
+      
+    }
+
 }
 
 
@@ -222,9 +253,9 @@ function processMSHSegment(fields, responseSegments) {
 
     segments[8] = utils.incrementNumericPart(segments[8]);
 
-    header = segments.join("|");
+    this.header = segments.join("|");
 
-    responseAck(socket);
+    responseAck();
     updateHeader();
     responseSegments.push(header);
 }

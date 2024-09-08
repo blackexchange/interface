@@ -8,7 +8,7 @@ const { monitorNewInterfaces } = require('./services/changeStreamWatcher');
 
         // Estabelece a conexão com o MongoDB
         await connectToDatabase();
-        monitorNewInterfaces();
+      //  monitorNewInterfaces();
 
         // Após a conexão, inicia o monitoramento
         manageConnections();
