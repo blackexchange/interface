@@ -1,0 +1,17 @@
+
+services:
+
+  sqlserver-db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver-db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=SqlServer_password1!
+    ports:
+      - "1433:1433"  # Porta padrão do SQL Server
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:

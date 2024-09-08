@@ -1,0 +1,23 @@
+{
+  "name": "multi_base",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx nodemon --trace-warnings -r dotenv/config ./src/index"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "knex": "^3.1.0",
+    "mssql": "^11.0.1",
+    "mysql2": "^3.11.0",
+    "odbc": "^2.4.9",
+    "oracledb": "^6.6.0",
+    "pg": "^8.12.0",
+    "sequelize": "^6.37.3"
+  }
+}

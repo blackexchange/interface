@@ -1,0 +1,11 @@
+{
+    "server_ip": "localhost",
+    "server_port": 12345,
+    "serial_port": "/dev/ttys018",
+    "baud_rate": 19200,
+    "data_bits":1,
+    "stop_bits":8,
+    "parity": "none",
+    "name":"VITRUS"
+  }
+  

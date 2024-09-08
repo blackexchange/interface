@@ -1,0 +1,28 @@
+{
+  "name": "serial-tcp-converter",
+  "version": "1.0.0",
+  "description": "Serial/TCP Converter by NexaZir",
+  "main": "index.js",
+  "bin": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "buildw": "pkg . --targets node16-win-x64",
+    "buildl": "pkg . --targets node16-linux-x64",
+    "buildm": "pkg . --targets node16-mac-x64",
+    "buildnexe":"nexe index.js --build"
+  },
+  "dependencies": {
+    "net": "^1.0.2",
+    "serialport": "^10.4.0"
+  },
+  "pkg": {
+    "scripts": "index.js",
+    "assets": [
+      "config.json"
+    ],
+    "ignore": [
+      "node_modules/@serialport/**"
+    ]
+  }
+  
+}
