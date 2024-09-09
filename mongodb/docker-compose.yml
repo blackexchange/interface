@@ -13,7 +13,7 @@ services:
       - ./secrets/mongo-keyfile:/etc/mongo-keyfile:ro
     networks:
       - mongo-cluster
-    command: bash -c "mongod --replSet rs0 --bind_ip localhost,mongo1 --keyFile /etc/mongo-keyfile"
+    command: bash -c "mongod --replSet rs0 --bind_ip 0.0.0.0 --keyFile /etc/mongo-keyfile"
 
   mongo2:
     image: mongo:latest
@@ -29,7 +29,7 @@ services:
       - ./secrets/mongo-keyfile:/etc/mongo-keyfile:ro
     networks:
       - mongo-cluster
-    command: bash -c "mongod --replSet rs0 --bind_ip localhost,mongo2 --keyFile /etc/mongo-keyfile"
+    command: bash -c "mongod --replSet rs0 --bind_ip 0.0.0.0 --keyFile /etc/mongo-keyfile"
 
   mongo3:
     image: mongo:latest
@@ -45,7 +45,7 @@ services:
       - ./secrets/mongo-keyfile:/etc/mongo-keyfile:ro
     networks:
       - mongo-cluster
-    command: bash -c "mongod --replSet rs0 --bind_ip localhost,mongo3 --keyFile /etc/mongo-keyfile"
+    command: bash -c "mongod --replSet rs0 --bind_ip 0.0.0.0 --keyFile /etc/mongo-keyfile"
 
 volumes:
   mongo1_data:

@@ -1,56 +1,42 @@
-// src/index.js
-
 const QueryService = require('./services/queryService');
+const machineUtils = require('./utils/machineUtils');
+
+require('dotenv').config();
+
+async function getMachineId() {
+    try {
+        const uniqueId = await machineUtils.generateUniqueMachineId();
+        
+        // Agora você pode usar `uniqueId` como quiser.
+        return uniqueId;
+    } catch (error) {
+        console.error('Erro ao processar máquina:', error);
+    }
+}
+
 
 (async () => {
+    const machineId = await getMachineId();
+
     // Configurações de clientes (normalmente armazenado em um banco de dados central ou arquivo de configuração)
     const clientConfigs = {
+     
         client1: {
-            dbType: 'oracle',
-            user: 'oracle_user',
-            password: 'oracle_password',
-            connectString: 'localhost:1521/xe',
-        },
-        client2: {
-            dbType: 'maxdb',
-            DSN: 'MaxDB_DSN',
-        },
-        client3: {
-            dbType: 'sqlserver',
-            user: 'SA',
-            password: 'MyPass@word',
-            server: 'localhost',
-            database: 'SMART',
-        },
-        client4: {
-            dbType: 'mysql',
-            host: 'localhost',
-            user: 'mysql_user',
-            password: 'mysql_password',
-            database: 'cliente_mysql',
-        },
-        client5: {
-            dbType: 'postgres',
-            host: 'localhost',
-            user: 'postgres_user',
-            password: 'postgres_password',
-            database: 'cliente_postgres',
-        },
-        // Outros clientes...
+            token:machineId,
+            clientId: process.env.CLIENT_ID,
+            dbType: process.env.DB_TYPE.toLocaleLowerCase(),
+            user: process.env.SQLSERVER_USER,
+            password: process.env.SQLSERVER_PASSWORD,
+            server: process.env.SQLSERVER_HOST,
+            database: process.env.SQLSERVER_DB
+        }
     };
-
     const queryService = new QueryService(clientConfigs);
 
-    // Exemplo de agente (um sistema que vai receber os resultados)
-    const agent = {
-        send: (data) => {
-            console.log('Enviando dados para o agente:', data);
-        },
-    };
 
     try {
         // Realiza uma consulta no cliente 1 (Oracle) e envia para o agente
-        await queryService.sendQueryResultsToAgent('client3', 'SELECT * FROM FAM', agent);
+        await queryService.sendQueryResultsToAgent('client1', "SELECT *  FROM FAM WHERE FAM_COD_AMOSTRA='109000167220'");
 
         /*
         // Realiza uma consulta no cliente 2 (MaxDB) e envia para o agente

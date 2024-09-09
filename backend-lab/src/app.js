@@ -10,6 +10,8 @@ const examsRouter = require('./routers/examsRouter');
 const ordersRouter = require('./routers/ordersRouter');
 const labOrdersRouter = require('./routers/labOrdersRouter');
 
+const rawRouter = require('./routers/rawRouter');
+const rawController = require('./controllers/rawController');
 
 
 
@@ -31,6 +33,9 @@ app.use(express.json());
 app.post('/login', authController.doLogin);
 app.post('/register', authController.doRegister);
 app.get('/logout', authController.doLogout);
+
+app.post('/raw', rawController.createOne);
+
 
 
 
