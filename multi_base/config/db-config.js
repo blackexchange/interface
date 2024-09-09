@@ -1,9 +1,6 @@
-// config/db-config.js
-
 require('dotenv').config();
 const knex = require('knex');
 const { Sequelize } = require('sequelize');
-const odbc = require('odbc');
 
 // Configurações para diferentes bancos de dados usando Knex.js
 const knexConfigs = {
@@ -16,22 +13,8 @@ const knexConfigs = {
         },
         pool: { min: 2, max: 10 },
         acquireConnectionTimeout: 10000,
-    },
-    sqlserver: {
-        client: 'mssql',
-        connection: {
-            user: process.env.SQLSERVER_USER,
-            password: process.env.SQLSERVER_PASSWORD,
-            server: process.env.SQLSERVER_HOST,
-            database: process.env.SQLSERVER_DB,
-            options: {
-                encrypt: true,
-                enableArithAbort: true,
-            },
-        },
-        pool: { min: 2, max: 10 },
-        acquireConnectionTimeout: 10000,
-    },
+    }
+    
 };
 
 // Configurações para diferentes bancos de dados usando Sequelize
@@ -68,15 +51,30 @@ const sequelizeConfigs = {
             idle: 10000,
         },
     },
+    sqlserver: {
+        dialect: 'mssql',
+        host: process.env.SQLSERVER_HOST,
+        username: process.env.SQLSERVER_USER,
+        password: process.env.SQLSERVER_PASSWORD,
+        database: process.env.SQLSERVER_DB,
+        dialectOptions: {
+            options: {
+                encrypt: true, // Se necessário
+                enableArithAbort: true,
+            },
+        },
+        pool: {
+            max: 10,
+            min: 2,
+            acquire: 30000,
+            idle: 10000,
+        },
+    },
 };
 
-// Configuração para MaxDB via ODBC
-const maxdbConfig = {
-    dsn: process.env.MAXDB_DSN,
-};
+
 
 module.exports = {
     knexConfigs,
-    sequelizeConfigs,
-    maxdbConfig,
+    sequelizeConfigs
 };

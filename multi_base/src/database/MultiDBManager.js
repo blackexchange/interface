@@ -2,7 +2,6 @@
 
 const createKnexConnection = require('./knex-connections');
 const createSequelizeConnection = require('./sequelize-connections');
-const createODBCConnection = require('./odbc-connections');
 
 class MultiDBManager {
     constructor(clientConfigs) {
@@ -28,16 +27,14 @@ class MultiDBManager {
         switch (dbType) {
             case 'oracle':
             case 'sqlserver':
-                connection = createKnexConnection(dbType);
+                connection = createSequelizeConnection(dbType);
                 break;
             case 'mysql':
             case 'postgres':
                 connection = createSequelizeConnection(dbType);
                 await connection.authenticate();
                 break;
-            case 'maxdb':
-                connection = await createODBCConnection();
-                break;
+          
             default:
                 throw new Error(`Tipo de banco de dados ${dbType} não suportado.`);
         }
@@ -57,10 +54,10 @@ class MultiDBManager {
         const connection = await this.getConnection(clientId);
 
         try {
-            if (dbType === 'oracle' || dbType === 'sqlserver') { // Knex.js
+            if (dbType === 'oracle') { // Knex.js
                 const result = await connection.raw(query);
                 return result;
-            } else if (dbType === 'mysql' || dbType === 'postgres') { // Sequelize
+            } else if (dbType === 'mysql' || dbType === 'postgres' || dbType === 'sqlserver') { // Sequelize
                 const [results, metadata] = await connection.query(query);
                 return results;
             } else if (dbType === 'maxdb') { // ODBC
@@ -83,9 +80,9 @@ class MultiDBManager {
             const connection = this.connections[clientId];
 
             try {
-                if (dbType === 'oracle' || dbType === 'sqlserver') { // Knex.js
+                if (dbType === 'oracle' ) { // Knex.js
                     await connection.destroy();
-                } else if (dbType === 'mysql' || dbType === 'postgres') { // Sequelize
+                } else if (dbType === 'mysql' || dbType === 'postgres'|| dbType === 'sqlserver') { // Sequelize
                     await connection.close();
                 } else if (dbType === 'maxdb') { // ODBC
                     await connection.close();

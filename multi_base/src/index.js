@@ -17,10 +17,10 @@ const QueryService = require('./services/queryService');
         },
         client3: {
             dbType: 'sqlserver',
-            user: 'sqlserver_user',
-            password: 'sqlserver_password',
+            user: 'SA',
+            password: 'MyPass@word',
             server: 'localhost',
-            database: 'cliente_db',
+            database: 'SMART',
         },
         client4: {
             dbType: 'mysql',
@@ -50,7 +50,7 @@ const QueryService = require('./services/queryService');
 
     try {
         // Realiza uma consulta no cliente 1 (Oracle) e envia para o agente
-        await queryService.sendQueryResultsToAgent('client1', 'SELECT * FROM users', agent);
+        await queryService.sendQueryResultsToAgent('client3', 'SELECT * FROM FAM', agent);
 
         /*
         // Realiza uma consulta no cliente 2 (MaxDB) e envia para o agente
