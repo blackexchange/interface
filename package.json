@@ -1,19 +1,16 @@
 {
-  
+    
   "name": "hl7serverv1",
-  
   "version": "1.0.0",
-  
   "description": "Analisador de Interface HL7",
-  
   "main": "server.js",
   
   "bin": "server.js",
   
   "scripts": {
-  
     
-  "test": "echo \"Error: no test specified\" && exit 1",
+      
+    "test": "echo \"Error: no test specified\" && exit 1",
   
     
   "start": "node server.js",
@@ -36,9 +33,9 @@
   "license": "ISC",
   
   "dependencies": {
-  
     
-  "amqplib": "^0.10.4",
+      
+    "amqplib": "^0.10.4",
   
     
   "cypress": "^13.13.3",

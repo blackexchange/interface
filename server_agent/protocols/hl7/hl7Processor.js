@@ -107,7 +107,23 @@ class HL7Processor {
     }
 
     async processQRDSegment(fields, responseSegments) {
-        // Processamento do segmento QRD
+        console.log("processando envio de query...");
+        let dspRec = '';
+        let db_enabled = 'FALSE';
+    
+        if (db_enabled === 'TRUE') {
+            const sampleOrders = await dbCon.getSampleOrders(fields[7], equipment);
+    
+            if (sampleOrders.length > 0) {
+                dspRec = formatSampleOrderResponse(sampleOrders);
+                responseSegments.push(dspRec);
+            } else {
+                responseSegments.push(noExam());
+            }
+        } else {
+            dspRec = createDefaultResponse(fields[7]);
+            responseSegments.push(dspRec);
+        }
     }
 
     async processQRFSegment(fields, responseSegments) {
