@@ -5,6 +5,7 @@ const rawSchema = new mongoose.Schema({
     client: Object,
     messageType: String,
     data:[],
+    params:[],
     dateTime: Date,
     createdAt: {
         type: Date,

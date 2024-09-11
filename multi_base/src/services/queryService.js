@@ -13,11 +13,13 @@ class QueryService {
      * @param {string} clientId - ID do cliente.
      * @param {string} query - Consulta SQL a ser executada.
      */
-    async sendQueryResultsToAgent(clientId, query) {
+    async sendQueryResultsToAgent(clientId, query, params) {
         try {
             const results = await this.dbManager.queryClient(clientId, query);
-            // Envia os resultados ao agente
-            sendData(results, this.clientConfigs[clientId]);
+            if (results.length > 0){
+
+                return sendData(results, this.clientConfigs[clientId], params);
+            }
         } catch (error) {
             console.error(`Erro ao enviar resultados para o agente para o cliente ${clientId}:`, error);
         }

@@ -7,7 +7,7 @@ function Footer() {
                 <div className="row">
                     <div className="col-12 col-md-4 col-xl-6 mb-4 mb-md-0">
                         <p className="mb-0 text-center text-lg-start">© 2023-<span className="current-year">2024</span> <a
-                            className="text-primary fw-normal" href="https://www.nexazir.com">Neville</a>. Beholder 2.2</p>
+                            className="text-primary fw-normal" href="https://www.nexazir.com">Neville</a>. NexaLab</p>
                     </div>
                     <div className="col-12 col-md-8 col-xl-6 text-center text-lg-start">
 

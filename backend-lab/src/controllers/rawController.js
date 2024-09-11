@@ -9,7 +9,7 @@ async function createOne(req, res, next) {
         const newRaw = await rawRepository.createOne(data);
         res.status(201).json(newRaw);
     } catch (err) {
-        logger('system', err);
+        //logger('system', err);
         res.status(500).json({ message: err.message });
     }
 }

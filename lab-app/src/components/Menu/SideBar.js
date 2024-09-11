@@ -41,7 +41,7 @@ function SideBar() {
                             <span className="sidebar-icon">
                                 <img src="/img/favicon/favicon-32x32.png" height="32" width="32" alt="Beholder Logo" />
                             </span>
-                            <span className="mt-1 ms-1 sidebar-text">Beholder 2.2</span>
+                            <span className="mt-1 ms-1 sidebar-text">NexaLab</span>
                         </Link>
                     </li>
                     <li className="nav-item">
@@ -64,8 +64,10 @@ function SideBar() {
                         <div className="multi-level collapse" role="list" id="submenu-intelligence">
                             <ul className="flex-column nav">
                                 <SideBarItem to="/dashboard" text="Dashboard" />
-                                <SideBarItem to="/reports" text="Reports" />
-                                <SideBarItem to="/wallet" text="Wallet" />
+                                <SideBarItem to="/reports" text="Gestor de Interfaces" />
+                                <SideBarItem to="/wallet" text="Resultados" />
+                                <SideBarItem to="/wallet" text="Integrações" />
+                                <SideBarItem to="/wallet" text="Filas" />
                             </ul>
                         </div>
                     </li>
@@ -107,7 +109,7 @@ function SideBar() {
                                         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                                     </svg>
                                 </span>
-                                <span className="sidebar-text">Action Templates</span>
+                                <span className="sidebar-text">Cadastros</span>
                             </span>
                             <span className="link-arrow">
                                 <svg className="icon icon-sm" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -117,8 +119,9 @@ function SideBar() {
                         </span>
                         <div className="multi-level collapse" role="list" id="submenu-templates">
                             <ul className="flex-column nav">
-                                <SideBarItem to="/orderTemplates" text="Order" />
-                                <SideBarItem to="/withdrawTemplates" text="Withdraw" />
+                                <SideBarItem to="/orderTemplates" text="Pacientes" />
+                                <SideBarItem to="/interfaces" text="Aparelhos" />
+                                <SideBarItem to="/withdrawTemplates" text="Exames/Aparelho" />
                             </ul>
                         </div>
                     </li>
