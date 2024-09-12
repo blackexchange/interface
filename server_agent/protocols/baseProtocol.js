@@ -4,6 +4,8 @@ class BaseProtocol {
             throw new Error("Cannot instantiate abstract class DeviceCommunication directly.");
         }
         this.device = device;
+        this.socket = null; // Variável de instância para o socket
+
     }
 
     // Método comum para envio de mensagem

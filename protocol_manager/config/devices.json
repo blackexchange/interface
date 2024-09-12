@@ -1,0 +1,31 @@
+{
+    "devices": [
+      {
+        "name": "Device1",
+        "protocol": "HL7",
+        "mode": "TCP",
+        "host": "127.0.0.1",
+        "port": 3000,
+        "timeout": 5000,
+        "role": "server"
+      },
+      {
+        "name": "Device12",
+        "protocol": "HL7",
+        "mode": "TCP",
+        "host": "127.0.0.1",
+        "port": 3100,
+        "timeout": 5000,
+        "role": "server"
+      },
+      {
+        "name": "Device2",
+        "protocol": "ASTM",
+        "mode": "Serial",
+        "serial_port": "/dev/ttys017",
+        "baud_rate": 9600,
+        "timeout": 5000
+      }
+    ]
+  }
+  

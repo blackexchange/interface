@@ -1,0 +1,18 @@
+{
+  "name": "protocol_manager",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx nodemon --trace-warnings -r ./index"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "hl7": "^1.1.1",
+    "lodash": "^4.17.21",
+    "serialport": "^12.0.0"
+  }
+}
