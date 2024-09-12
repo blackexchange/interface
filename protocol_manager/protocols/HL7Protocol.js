@@ -131,7 +131,57 @@ class HL7Protocol {
             Logger.log('Dispositivo não está conectado (HL7)', 'ERROR');
         }
     }
-    processObservationResult(message) {
+
+
+    // Método para receber e processar mensagens
+    // Método para receber e processar mensagens HL7 com os delimitadores SB (0x0B) e EB (0x1C)
+// Método para receber e processar mensagens HL7 com os delimitadores SB (0x0B) e EB (0x1C)
+    receiveMessage(data) {
+        // O data é um Buffer, não uma string, então lidamos com ele como buffer
+        const messageBuffer = Buffer.from(data);
+
+        // Verificar se a mensagem começa com o delimitador de início de bloco (SB) e termina com EB e CR
+        if (messageBuffer[0] === 0x0B && messageBuffer[messageBuffer.length - 2] === 0x1C && messageBuffer[messageBuffer.length - 1] === 0x0D) {
+
+            // Remove os delimitadores SB e EB/CR utilizando subarray
+            const trimmedBuffer = messageBuffer.subarray(1, messageBuffer.length - 2); // Remove SB (0x0B) no início e EB (0x1C) + CR (0x0D) no final
+
+            // Converter o buffer restante para string
+            let rawMessage = trimmedBuffer.toString('utf8');
+
+            // Substituir qualquer ocorrência de \n (nova linha) por nada
+            rawMessage = rawMessage.replace(/\n/g, '');
+
+            // Processar a mensagem HL7 usando manipulação nativa
+            const parsedMessage = parseHL7Message(rawMessage);
+            Logger.log(`Mensagem decodificada (HL7): ${JSON.stringify(parsedMessage)}`);
+
+            const messageType = _.get(parsedMessage, '[0][8]', ''); // Acessar o tipo da mensagem (MSH segmento, campo 9)
+            switch (messageType) {
+                case "QRY^Q02":
+                    this.processQueryRequest(parsedMessage);
+                    break;
+                case "QCK^Q02":
+                    this.processQueryAcknowledgment(parsedMessage);
+                    break;
+                case "DSR^Q03":
+                    this.processDataSourceResponse(parsedMessage);
+                    break;
+                case "ACK^Q03":
+                    this.processAcknowledgment(parsedMessage);
+                    break;
+                case "ORU^R01":
+                    this.processObservationResult(parsedMessage);
+                    break;
+                default:
+                    Logger.log(`Tipo de mensagem não reconhecido: ${messageType}`, 'ERROR');
+            }
+        } else {
+            Logger.log("Mensagem recebida não contém delimitadores válidos de início e fim", 'ERROR');
+        }
+    }
+
+    processORU_R01(message) {
         const patientName = _.get(message, '[1][5]', ''); // No PID segmento, campo 6, está o nome do paciente
         const testResults = _.filter(message, (segment) => segment[0] === 'OBX'); // Filtrar os segmentos OBX (resultados de observação)
     
@@ -144,54 +194,25 @@ class HL7Protocol {
         });
     }
     
-
-    // Método para receber e processar mensagens
-    // Método para receber e processar mensagens HL7 com os delimitadores SB (0x0B) e EB (0x1C)
-// Método para receber e processar mensagens HL7 com os delimitadores SB (0x0B) e EB (0x1C)
-receiveMessage(data) {
-    // O data é um Buffer, não uma string, então lidamos com ele como buffer
-    const messageBuffer = Buffer.from(data);
-
-    // Verificar se a mensagem começa com o delimitador de início de bloco (SB) e termina com EB e CR
-    if (messageBuffer[0] === 0x0B && messageBuffer[messageBuffer.length - 2] === 0x1C && messageBuffer[messageBuffer.length - 1] === 0x0D) {
-
-        // Remove os delimitadores SB e EB/CR utilizando subarray
-        const trimmedBuffer = messageBuffer.subarray(1, messageBuffer.length - 2); // Remove SB (0x0B) no início e EB (0x1C) + CR (0x0D) no final
-
-        // Converter o buffer restante para string
-        let rawMessage = trimmedBuffer.toString('utf8');
-
-        // Substituir qualquer ocorrência de \n (nova linha) por nada
-        rawMessage = rawMessage.replace(/\n/g, '');
-
-        // Processar a mensagem HL7 usando manipulação nativa
-        const parsedMessage = parseHL7Message(rawMessage);
-        Logger.log(`Mensagem decodificada (HL7): ${JSON.stringify(parsedMessage)}`);
-
-        const messageType = _.get(parsedMessage, '[0][8]', ''); // Acessar o tipo da mensagem (MSH segmento, campo 9)
-        switch (messageType) {
-            case "QRY^Q02":
-                this.processQueryRequest(parsedMessage);
-                break;
-            case "QCK^Q02":
-                this.processQueryAcknowledgment(parsedMessage);
-                break;
-            case "DSR^Q03":
-                this.processDataSourceResponse(parsedMessage);
-                break;
-            case "ACK^Q03":
-                this.processAcknowledgment(parsedMessage);
-                break;
-            case "ORU^R01":
-                this.processObservationResult(parsedMessage);
-                break;
-            default:
-                Logger.log(`Tipo de mensagem não reconhecido: ${messageType}`, 'ERROR');
-        }
-    } else {
-        Logger.log("Mensagem recebida não contém delimitadores válidos de início e fim", 'ERROR');
+    processACK_R01(message) {
+        Logger.log("Processando ACK^Q03...");
     }
-}
+
+
+    processQRY_Q02(message) {
+        Logger.log("Processando QRY^Q02...");
+        const barcode = message[2][8]; // Exemplo de como acessar o código de barras
+        Logger.log(`Código de barras da amostra: ${barcode}`);
+
+        // Enviar uma resposta QCK^Q02 (confirmação de recebimento)
+        const qckResponse = this.createQCKResponse();
+        this.sendMessage(qckResponse);
+    }
+
+    
+    processQCK_Q02(message) {
+        Logger.log("Processando ACK^Q03...");
+    }
 
 
 
@@ -206,10 +227,24 @@ receiveMessage(data) {
         this.sendMessage(qckResponse);
     }
 
-    // Método para processar QCK^Q02 (confirmação de consulta)
-    processQueryAcknowledgment(message) {
-        Logger.log("Processando QCK^Q02...");
+
+
+    processDSR_Q03(message) {
+        Logger.log("Processando QRY^Q02...");
+        const barcode = message[2][8]; // Exemplo de como acessar o código de barras
+        Logger.log(`Código de barras da amostra: ${barcode}`);
+
+        // Enviar uma resposta QCK^Q02 (confirmação de recebimento)
+        const qckResponse = this.createQCKResponse();
+        this.sendMessage(qckResponse);
     }
+    
+
+    processACK_Q03(message) {
+        Logger.log("Processando ACK^Q03...");
+    }
+    
+
 
     // Método para processar DSR^Q03 (resposta da fonte de dados)
     processDataSourceResponse(message) {
@@ -221,11 +256,11 @@ receiveMessage(data) {
         this.sendMessage(ackResponse);
     }
 
-    // Método para processar ACK^Q03 (confirmação de recebimento de dados)
-    processAcknowledgment(message) {
-        Logger.log("Processando ACK^Q03...");
-    }
-    
+
+
+
+
+
 
     // Método para criar uma mensagem QCK^Q02 de resposta
     createQCKResponse() {
