@@ -89,21 +89,27 @@ class HL7Protocol {
 
     // Método para enviar uma mensagem
     sendMessage(message) {
+
+
         // Serializa a mensagem JSON de volta para o formato HL7
         const hl7Message = serializeHL7MessageFromJSON(message);
+       // Logger.log(`Mensagem enviada (HL7 Cliente): ${JSON.stringify(message), hl7Message}`);
 
         // Adiciona os delimitadores de início e fim da mensagem HL7
         const formattedMessage = String.fromCharCode(0x0B) + hl7Message + String.fromCharCode(0x1C) + '\r';
-
-        if (this.isConnected && this.device.role === 'client') {
-            this.client.write(formattedMessage);
+       // Logger.log(`Mensagem enviada (HL7 Cliente): ${formattedMessage}`);
+        
+        
+        if (this.isConnected) {
             Logger.log(`Mensagem enviada (HL7 Cliente): ${formattedMessage}`);
+
+            this.client.write(formattedMessage);
             this.messageQueue.push(formattedMessage);
-        } else if (this.device.role === 'server') {
-            Logger.log('Mensagem enviada (HL7 Server) ainda não implementada', 'ERROR');
+        
         } else {
             Logger.log('Dispositivo não está conectado (HL7)', 'ERROR');
         }
+            
     }
 
     // Método para receber e processar mensagens HL7 com os delimitadores SB (0x0B) e EB (0x1C)
@@ -147,24 +153,52 @@ class HL7Protocol {
         const testResults = message.OBX || []; // Acessa todos os segmentos OBX (resultados de observação)
 
         Logger.log(`Nome do Paciente: ${patientName}`);
+/*
+
         testResults.forEach(result => {
             const testName = result.field4; // Nome do teste
             const testValue = result.field5; // Valor do teste
             const unit = result.field6.trim(); // Unidade do teste
             Logger.log(`Resultado do teste ${testName}: ${testValue} ${unit}`);
         });
+       */
 
-        const ackMessage = this.createACKResponse(message.MSH?.[0]?.field9); // Pega o ID da mensagem original para incluir no ACK
-        this.sendMessage(ackMessage);
+        const ackMessage = this.createACKResponse(message); // Pega o ID da mensagem original para incluir no ACK
+        const ret = this.sendMessage(ackMessage);
+        Logger.log(`retorno: ${ret}`);
+
     }
 
-    createACKResponse(messageControlId) {
+    createACKResponse(message) {
+        const messageId = message.MSH?.[0]?.field9;
+        const ackType = message.MSH?.[0]?.field8;
+
+        let headerReturn = message.MSH;
+
+        let ackReturn = "";
+
+        switch (ackType) {
+            case "ORU^R01":
+                ackReturn = "ACK^R01"
+                headerReturn.field8 = ackReturn;
+                
+                break;
+                
+            case "ORU^R01":
+                ackReturn = "ACK^R01"  
+                
+                break;
+                
+            default:
+                break;
+        }
         const ackMessage = {
-            "MSH": message.MSH,
+            "MSH": headerReturn,
             "MSA": [
-                { "field0": "MSA", "field1": "AA", "field2": messageControlId || "12345", "field3": "Mensagem recebida com sucesso" }
+                { "field0": "MSA", "field1": "AA", "field2": messageId , "field3": "Mensagem recebida com sucesso","field4": "" ,"field5": "" , "field6": "" ,"field7": 0 ,"field8": ""}
             ]
         };
+        
         return ackMessage;
     }
     
