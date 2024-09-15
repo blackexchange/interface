@@ -6,9 +6,7 @@ function parseHL7Message(rawMessage) {
 function serializeHL7Message(parsedMessage) {
     return parsedMessage.map(segment => segment.join('|')).join('\r') + '\r';
 }
-
 function parseHL7MessageToJSON(rawMessage) {
-    
     const segments = rawMessage.split('\r').filter(segment => segment !== '');
 
     const parsedMessage = {};
@@ -20,8 +18,9 @@ function parseHL7MessageToJSON(rawMessage) {
             parsedMessage[segmentType] = [];
         }
 
+        // Mapeia os campos diretamente, sem tratar subcampos separados por ^
         const segmentData = fields.reduce((acc, field, index) => {
-            acc[`field${index}`] = field;
+            acc[`field${index}`] = field; // Atribui cada campo diretamente ao JSON
             return acc;
         }, {});
 
@@ -32,14 +31,35 @@ function parseHL7MessageToJSON(rawMessage) {
 }
 
 function serializeHL7MessageFromJSON(parsedMessage) {
-    const segments = Object.keys(parsedMessage).map(segmentType => {
-        return parsedMessage[segmentType].map(segment => {
-            return Object.values(segment).join('|');
-        }).join('\r');
+    // Itera sobre cada segmento do parsedMessage
+    const segments = parsedMessage.map(segmentObject => {
+        return Object.keys(segmentObject).map(segmentType => {
+            const segment = segmentObject[segmentType];
+
+            // Concatena os campos do segmento, separados por '|'
+            return Object.keys(segment).map(fieldKey => {
+                const fieldValue = segment[fieldKey];
+
+                // Verifica se o campo contém subcampos (objeto) e converte corretamente
+                if (typeof fieldValue === 'object' && fieldValue !== null) {
+                    return Object.values(fieldValue).join('^'); // Se o campo tiver subcampos, os une com '^'
+                } else {
+                    return fieldValue || ''; // Retorna o valor do campo ou uma string vazia
+                }
+            }).join('|'); // Une os campos com '|'
+        }).join('\r'); // Une os segmentos com '\r'
     });
 
-    return segments.join('\r') + '\r';
+    // Concatena todos os segmentos com '\r'
+    const message = segments.join('\r');
+    return message;
 }
+
+
+
+
+
+
 
 module.exports = { parseHL7MessageToJSON, serializeHL7MessageFromJSON ,parseHL7Message, serializeHL7Message};
 

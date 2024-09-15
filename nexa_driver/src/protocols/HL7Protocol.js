@@ -1,6 +1,7 @@
 const net = require('net');
 const Logger = require('../utils/Logger');
-const { parseHL7MessageToJSON, serializeHL7MessageFromJSON } = require('../utils/HL7Helper');
+const { parseHL7MessageToJSON, serializeHL7MessageFromJSON } = require('../utils/hl7Helper');
+
 
 class HL7Protocol {
     constructor(device) {
@@ -9,6 +10,8 @@ class HL7Protocol {
         this.retryCount = 0;
         this.messageQueue = [];
         this.acknowledgementQueue = [];
+        this.timeOut = 10;
+        this.lastMessageReceived = {};
     }
 
     // Método para iniciar conexão como cliente ou servidor com base no papel (role)
@@ -42,6 +45,7 @@ class HL7Protocol {
         });
 
         this.client.on('error', (err) => {
+            this.isConnected = false;
             this.connectionErrorHandler(err);
         });
 
@@ -51,18 +55,32 @@ class HL7Protocol {
     // Método para iniciar um servidor TCP
     startTCPServer() {
         this.server = net.createServer((socket) => {
-            Logger.log(`Cliente conectado (HL7 Server) a partir de ${socket.remoteAddress}:${socket.remotePort}`);
+            this.isConnected = true;
+            this.messageQueue = [];
+            Logger.log(`Cliente conectado a partir de ${socket.remoteAddress}:${socket.remotePort}`,this.device);
 
             socket.on('data', (data) => {
-                Logger.log(`Mensagem recebida (HL7 Server): ${data}`);
+                Logger.log(`Mensagem recebida : ${data}`);
                 this.receiveMessage(data);
+
+                this.messageQueue.forEach(msg => {
+                    socket.write(msg,() => {
+                    Logger.log(`Mensagem enviada : ${msg}`);
+
+                    });
+                });
+                this.messageQueue = [];
+                
             });
 
             socket.on('close', () => {
+                this.isConnected = false;
                 Logger.log('Cliente desconectado (HL7 Server)');
             });
 
             socket.on('error', (err) => {
+                this.isConnected = false;
+                
                 this.connectionErrorHandler(err);
             });
         });
@@ -89,30 +107,20 @@ class HL7Protocol {
 
     // Método para enviar uma mensagem
     sendMessage(message) {
-
-
-        // Serializa a mensagem JSON de volta para o formato HL7
+        // Serializa a mensagem JSON para o formato HL7
         const hl7Message = serializeHL7MessageFromJSON(message);
-       // Logger.log(`Mensagem enviada (HL7 Cliente): ${JSON.stringify(message), hl7Message}`);
+        let formattedMessage= String.fromCharCode(0x0B) + hl7Message + String.fromCharCode(0x1C) + '\r';
 
-        // Adiciona os delimitadores de início e fim da mensagem HL7
-        const formattedMessage = String.fromCharCode(0x0B) + hl7Message + String.fromCharCode(0x1C) + '\r';
-       // Logger.log(`Mensagem enviada (HL7 Cliente): ${formattedMessage}`);
-        
+        Logger.log(`Mensagem enviada (HL7): ${formattedMessage}`);
         
         if (this.isConnected) {
-            Logger.log(`Mensagem enviada (HL7 Cliente): ${formattedMessage}`);
-
-            this.client.write(formattedMessage);
             this.messageQueue.push(formattedMessage);
-        
         } else {
             Logger.log('Dispositivo não está conectado (HL7)', 'ERROR');
         }
-            
     }
 
-    // Método para receber e processar mensagens HL7 com os delimitadores SB (0x0B) e EB (0x1C)
+    // Método para receber e processar mensagens HL7
     receiveMessage(data) {
         try {
             const messageBuffer = Buffer.from(data);
@@ -121,20 +129,24 @@ class HL7Protocol {
             if (messageBuffer[0] === 0x0B && messageBuffer[messageBuffer.length - 2] === 0x1C && messageBuffer[messageBuffer.length - 1] === 0x0D) {
                 // Remove os delimitadores
                 const trimmedBuffer = messageBuffer.subarray(1, messageBuffer.length - 2);
-                let rawMessage = trimmedBuffer.toString('utf8').replace(/\n/g, '');
+                const rawMessage = trimmedBuffer.toString('utf8').replace(/\n/g, '');
+                //const rawMessage = parseHL7MessageToJSON(trimmedBuffer);
 
-                // Processa a mensagem HL7 e a converte para JSON
-                const parsedMessageJSON = parseHL7MessageToJSON(rawMessage);
-                Logger.log(`Mensagem decodificada (HL7 JSON): ${JSON.stringify(parsedMessageJSON)}`);
+                // Processa a mensagem HL7 usando a biblioteca hl7
+                const parsedMessage = parseHL7MessageToJSON(rawMessage);
+                this.lastMessageReceived = parsedMessage;
+             
+                Logger.log(`Mensagem decodificada (HL7): ${JSON.stringify(parsedMessage)}`);
 
                 // Identifica o tipo de mensagem e chama o processador correspondente
-                const messageType = parsedMessageJSON.MSH?.[0]?.field8 || ''; // Acessa o campo 9 do segmento MSH
+                const messageType = parsedMessage?.MSH[0]?.field8 || ''; // Acessa o campo 9 do segmento MSH
+
                 switch (messageType) {
                     case 'ORU^R01':
-                        this.processORU_R01(parsedMessageJSON);
+                        this.processORU_R01();
                         break;
                     case 'QRY^Q02':
-                        this.processQueryRequest(parsedMessageJSON);
+                        this.processQRY_Q02();
                         break;
                     default:
                         Logger.log(`Tipo de mensagem não reconhecido: ${messageType}`, 'ERROR');
@@ -143,70 +155,245 @@ class HL7Protocol {
                 throw new Error("Mensagem recebida não contém delimitadores válidos de início e fim");
             }
         } catch (err) {
-            Logger.log(`Erro ao processar mensagem HL7: ${err.message}`, 'ERROR');
+            Logger.log(`Erro ao processar recebimento de mensagem HL7: ${err.message}`, 'ERROR');
         }
     }
 
-    processORU_R01(message) {
-        
-        const patientName = message.PID?.[0]?.field5 || ''; // No PID segmento, campo 5 está o nome do paciente
+    processORU_R01() {
+        let message = this.lastMessageReceived;
+        const patientName = message.PID[0]?.field5 || ''; // No PID segmento, campo 5 está o nome do paciente
         const testResults = message.OBX || []; // Acessa todos os segmentos OBX (resultados de observação)
 
         Logger.log(`Nome do Paciente: ${patientName}`);
-/*
 
         testResults.forEach(result => {
-            const testName = result.field4; // Nome do teste
-            const testValue = result.field5; // Valor do teste
-            const unit = result.field6.trim(); // Unidade do teste
+            const testName = result.field3; // Nome do teste
+            const testValue = result.field4; // Valor do teste
+            const unit = result.field5; // Unidade do teste
             Logger.log(`Resultado do teste ${testName}: ${testValue} ${unit}`);
         });
-       */
 
-        const ackMessage = this.createACKResponse(message); // Pega o ID da mensagem original para incluir no ACK
-        const ret = this.sendMessage(ackMessage);
-        Logger.log(`retorno: ${ret}`);
+        // Envia o ACK
+        const ackMessage = this.createACKResponse(); // Pega o ID da mensagem original para incluir no ACK
+       
+        this.sendMessage(ackMessage);
+    }
+
+    processQRY_Q02() {
+
+        let message = this.lastMessageReceived;
+        const amostra = message.QRD[0]?.field8 || ''; // No PID segmento, campo 5 está o nome do paciente
+
+        Logger.log(`Query: ${amostra}`);
+
+        const worklist = [{
+            barCode: "12212",
+            name: "ROnaldo",
+            sex:"M",
+            material:"serum",
+            exams: [{exam:"EXAM1"}, {exam:"EXAM2"}, {exam:"EXAM3"}, {exam:"EXAM4"}] // Exemplo de exames
+        }];
+ 
+     
+        // Envia o ACK
+        const ackMessage = this.createQCKResponse(worklist.length>0); // Pega o ID da mensagem original para incluir no ACK
+       
+        this.sendMessage(ackMessage);
+
+        if (worklist.length>0){
+
+            this.processDSR_Q03(worklist[0]);
+
+
+        }
+    }
+
+    processDSR_Q03(worklist) {
+
+        let message = this.lastMessageReceived;
+        const barCode = message.QRD[0]?.field8 || ''; // No PID segmento, campo 5 está o nome do paciente
+
+        Logger.log(`Amostra: ${barCode}`);
+
+
+        const dsrResponse = this.createDSRResponse(worklist); // Pega o ID da mensagem original para incluir no ACK
+
+        this.sendMessage(dsrResponse);
 
     }
 
-    createACKResponse(message) {
-        const messageId = message.MSH?.[0]?.field9;
-        const ackType = message.MSH?.[0]?.field8;
+    createACKResponse() {
+        let MSH = {
+            MSH:{
+                field0 : "MSH",
+                field1 : this.lastMessageReceived.MSH[0].field1,
+                field2 : this.lastMessageReceived.MSH[0].field3,
+                field3 : this.lastMessageReceived.MSH[0].field2,
+                field4 : this.lastMessageReceived.MSH[0].field5,
+                field5 : this.lastMessageReceived.MSH[0].field4,
+                field6 : this.getCurrentTimestamp(),
+                field7 : this.lastMessageReceived.MSH[0].field7,
+                field8 : "ACK^R01"}
+            
+        };            
 
-        let headerReturn = message.MSH;
 
-        let ackReturn = "";
-
-        switch (ackType) {
-            case "ORU^R01":
-                ackReturn = "ACK^R01"
-                headerReturn.field8 = ackReturn;
-                
-                break;
-                
-            case "ORU^R01":
-                ackReturn = "ACK^R01"  
-                
-                break;
-                
-            default:
-                break;
+        let MSA = { "MSA":{
+            field0:"MSA",
+            field1:"AA",
+            field2: this.lastMessageReceived.MSH[0].field9,
+            field3:"SUCCESS",
+            field4:"",
+            field5:"",
+            field6:"0",
+            field7:""}
         }
-        const ackMessage = {
-            "MSH": headerReturn,
-            "MSA": [
-                { "field0": "MSA", "field1": "AA", "field2": messageId , "field3": "Mensagem recebida com sucesso","field4": "" ,"field5": "" , "field6": "" ,"field7": 0 ,"field8": ""}
-            ]
-        };
+
+        const ackMessage =[MSH,MSA];
         
         return ackMessage;
     }
+
+    createQCKResponse(noexam = false) {
+        let MSH = {
+            MSH:{
+                field0 : "MSH",
+                field1 : this.lastMessageReceived.MSH[0].field1,
+                field2 : this.lastMessageReceived.MSH[0].field3,
+                field3 : this.lastMessageReceived.MSH[0].field2,
+                field4 : this.lastMessageReceived.MSH[0].field5,
+                field5 : this.lastMessageReceived.MSH[0].field4,
+                field6 : this.getCurrentTimestamp(),
+                field7 : this.lastMessageReceived.MSH[0].field7,
+                field8 : "QCK^Q02"}
+            
+        };            
+
+
+        let MSA = { "MSA":{
+            field0:"MSA",
+            field1:"AA",
+            field2: this.lastMessageReceived.MSH[0].field9,
+            field3:"SUCCESS",
+            field4:"",
+            field5:"",
+            field6:"0",
+            field7:""}
+        }
+        let ERR = { "ERR":{
+            field0:"ERR",
+            field1:"0"}
+        }
+
+        let QAK = { "QAK":{
+            field0:"QAK",
+            field1: `${noexam ? "NF":"OK"}`,
+            field2: "OK",
+            field3:""}
+        }
+
+        const ackMessage =[MSH,MSA,ERR,QAK];
+        
+        return ackMessage;
+    }
+
     
 
-    // Método para processar solicitações de consulta
+    createDSRResponse(worklist) {
+
+        const totalExam =worklist.exams.length; 
+        const examList = worklist.exams.map((exam, index) => {
+            return {DSP:{
+                    field0: "DSP",
+                    field1: (29 + index).toString(), // Incrementa a partir de 29
+                    field2: "",
+                    field3: "",
+                    field4: exam.exam + "^^^", // Insere o nome do exame no field4
+                    field5: ""
+            }};
+        });
+
+        const MSH = {
+            MSH:{
+                field0 : "MSH",
+                field1 : this.lastMessageReceived.MSH[0].field1,
+                field2 : this.lastMessageReceived.MSH[0].field3,
+                field3 : this.lastMessageReceived.MSH[0].field2,
+                field4 : this.lastMessageReceived.MSH[0].field5,
+                field5 : this.lastMessageReceived.MSH[0].field4,
+                field6 : this.getCurrentTimestamp(),
+                field7 : this.lastMessageReceived.MSH[0].field7,
+                field8 : "DSR^Q03"}
+            
+        };   
+
+        const QRD = {
+            QRD:this.lastMessageReceived.QRD[0]
+        };  
+
+        const QRF = {
+            QRF:this.lastMessageReceived.QRF[0]
+        };   
+        
+        let DSP = [
+            { DSP: { field0: "DSP", field1: "1", field2: "", field3: worklist?.admissionNumber, field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "2", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "3", field2: "", field3: worklist?.name, field4:"", field5: "" } },
+            { DSP: { field0: "DSP", field1: "4", field2: "", field3: worklist?.dateOfBirth, field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "5", field2: "", field3: worklist?.sex, field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "6", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "7", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "8", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "9", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "10", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "11", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "12", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "13", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "14", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "15", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "16", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "17", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "18", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "19", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "20", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "21", field2: "", field3: worklist.barCode, field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "22", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "23", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "24", field2: "", field3: "N", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "25", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "26", field2: "", field3: worklist?.material, field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "27", field2: "", field3: "", field4: "", field5: "" } },
+            { DSP: { field0: "DSP", field1: "28", field2: "", field3: "", field4: "", field5: "" } }
+        ];
+        DSP = DSP.concat(examList, { DSC: { field0: "DSC", field1: `${totalExam + 29}`, field2: "" } });
+        
+
+
+       
+        const drsResponse =[MSH,QRD,QRF,DSP];
+        
+        return drsResponse;
+    }
+
+    async getWorkList(barCode) {
+
+      
+        Logger.log(`Buscando: ${barCode}`);
+
+        // Envia o ACK
+      //  const ackMessage = this.createDSRResponse(); // Pega o ID da mensagem original para incluir no ACK
+       
+      //  this.sendMessage(ackMessage);
+    }
+
+    getCurrentTimestamp() {
+        const now = new Date();
+        return now.toISOString().replace(/[-:T]/g, '').split('.')[0]; // Formata a data no estilo HL7
+    }
+
     processQueryRequest(message) {
         Logger.log("Processando QRY^Q02...");
-        const barcode = message.OBR?.[0]?.field3 || ''; // Acessa o código de barras da amostra
+        const barcode = message.OBR?.[3] || ''; // Acessa o código de barras da amostra
         Logger.log(`Código de barras da amostra: ${barcode}`);
 
         // Envia uma resposta QCK^Q02 (confirmação de recebimento)
@@ -214,18 +401,6 @@ class HL7Protocol {
         this.sendMessage(qckResponse);
     }
 
-    // Método para criar uma resposta QCK^Q02
-    createQCKResponse() {
-        const qckMessage = {
-            "MSH": [
-                { "field0": "MSH", "field1": "^~\\&", "field2": "Server", "field3": "LIS", "field4": "Analyzer", "field5": "Lab", "field6": "20230911120000", "field7": "", "field8": "QCK^Q02", "field9": "12345", "field10": "P", "field11": "2.3.1" }
-            ],
-            "MSA": [
-                { "field0": "MSA", "field1": "AA", "field2": "12345", "field3": "Consulta recebida" }
-            ]
-        };
-        return qckMessage;
-    }
 
     connectionErrorHandler(err) {
         Logger.log(`Erro de conexão (HL7): ${err.message}`, 'ERROR');

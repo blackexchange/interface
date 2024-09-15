@@ -1,7 +1,8 @@
 const net = require('net');
 const HL7Protocol = require('../src/protocols/HL7Protocol');
 const Logger = require('../src/utils/Logger');
-const { parseHL7MessageToJSON, serializeHL7MessageFromJSON } = require('../src/utils/HL7Helper');
+const { parseHL7MessageToJSON, serializeHL7MessageFromJSON } = require('../src/utils/hl7Helper');
+
 
 jest.mock('net'); // Mockar a biblioteca net para simular o servidor
 jest.mock('../src/utils/Logger'); // Mockar o logger para evitar poluição de logs
@@ -26,7 +27,7 @@ describe('HL7Protocol', () => {
             close: jest.fn(), // Simula fechar o servidor
         };
     
-        const socketMock = {
+        const clientSock = {
             on: jest.fn(), // Mock para simular os eventos de socket (ex: 'data', 'close')
             write: jest.fn(), // Simula a escrita de dados
             remoteAddress: 'localhost', // Simula o endereço IP do cliente
@@ -36,7 +37,7 @@ describe('HL7Protocol', () => {
     
         net.createServer.mockImplementation((callback) => {
             // Simula a criação de um servidor
-            callback(socketMock); // Simula um cliente se conectando
+            callback(clientSock); // Simula um cliente se conectando
             return serverMock;
         });
     
@@ -48,7 +49,8 @@ describe('HL7Protocol', () => {
     
         // Simula recebimento de dados do cliente
         const mockData = Buffer.from('\x0BMSH|^~\\&|Analyzer|Lab||||ORU^R01|1|P|2.3.1|\x1C\r');
-        socketMock.on.mock.calls[0][1](mockData); // Simula a chamada do 'data' com dados
+        clientSock.on.mock.calls[0][1](mockData); // Simula a chamada do 'data' com dados
+        
     
         // Ajusta a verificação para incluir apenas a parte relevante da mensagem recebida (sem delimitadores)
         expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('MSH|^~\\&|Analyzer|Lab||||ORU^R01|1|P|2.3.1|'));
@@ -60,12 +62,13 @@ describe('HL7Protocol', () => {
     });
 
     it('deve logar um erro para mensagem com tipo não reconhecido', () => {
+
         // Simula a mensagem HL7 com tipo desconhecido
-        const mockData = Buffer.from('\x0BMSH|^~\\&|Analyzer|Lab|||||UNKNOWN^XX|1|P|2.3.1|\x1C\r');
+        const mockData = Buffer.from('\x0BMSH|^~\\&|Analyzer|Lab|||||UNKNOWN^XX|1|P|2.3.1|\rPID|1||123456||SILVONEI DA HORA\rOBX|1|NM|GLUCOSE|120|mg/dL|\x1C\r');
         
         hl7Protocol.receiveMessage(mockData);
 
-        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Tipo de mensagem não reconhecido: UNKNOWN^XX'),"ERROR");
+        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Tipo de mensagem não reconhecido: UNKNOWN'),"ERROR");
     });
 
     it('deve chamar processamento de resultado ORU^R01', () => {
@@ -73,10 +76,10 @@ describe('HL7Protocol', () => {
         const mockData = Buffer.from('\x0BMSH|^~\\&|Analyzer|Lab|||||ORU^R01|1|P|2.3.1|\r\x1C\r');
         
         hl7Protocol.receiveMessage(mockData);
-        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Nome do Paciente'));
+        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Nome do xPaciente'));
     });
 
-    it.only('deve chamar processamento de resultado ORU^R01 e enviar ACK', () => {
+    it('deve chamar processamento de resultado ORU^R01 e enviar ACK', () => {
         // Simula uma mensagem HL7 do tipo ORU^R01
         const mockData = Buffer.from('\x0BMSH|^~\\&|Analyzer|Lab|||||ORU^R01|1|P|2.3.1|\rPID|1||123456||SILVONEI DA HORA\rOBX|1|NM|GLUCOSE|120|mg/dL|\x1C\r');
         
@@ -88,7 +91,8 @@ describe('HL7Protocol', () => {
         
         // Verifica se o nome do paciente foi logado corretamente
         
-        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Mensagem enviad a'));
+        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Nome do Paciente: SILVONEI DA HORA'));
+        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining('Resultado do teste GLUCOSE: 120 mg/dL'));
         
         // Verifica se os resultados dos testes foram logados corretamente
        
@@ -99,6 +103,61 @@ describe('HL7Protocol', () => {
       //  const ackMessage = sendMessageSpy.mock.calls[0][0];
        // expect(ackMessage.MSH[0].field8).toBe('ACK^R01'); // Verifica o tipo da mensagem ACK
         //expect(ackMessage.MSA[0].field2).toBe('1'); // Verifica se o ID da mensagem original foi incluído no ACK
+    });
+    
+    it.only('deve enviar mensagem de ACK após processar ORU^R01', () => {
+        // Simulação de uma mensagem HL7 recebida (ORU^R01)
+        hl7Protocol.lastMessageReceived = {
+            MSH: [
+                {
+                    field0: "MSH",
+                    field1: "ASD&S",
+                    field2: "SendingApp",
+                    field3: "ReceivingApp",
+                    field4: "LAB 2",
+                    field5: "Lab",
+                    field6: "SendingFac",
+                    field7: "SendingFac",
+                    field8: "ORU^R01",
+                    field9: "123456",
+                }
+            ],
+            PID: [
+                { field5: "John Doe" }
+            ],
+            OBX: [
+                { field3: "GLUCOSE", field4: "120", field5: "mg/dL" },
+                { field3: "TSH", field4: "12", field5: "mg/dL" }
+                
+            ]
+        };
+        
+        // Espionando a função sendMessage para capturar o envio do ACK
+        const sendMessageSpy = jest.spyOn(hl7Protocol, 'sendMessage').mockImplementation(() => {});
+
+        // Executa o processamento do ORU^R01 que gera e envia o ACK
+        hl7Protocol.processORU_R01();
+
+        // Verifica se o nome do paciente foi logado corretamente
+        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining("Nome do Paciente: John Doe"));
+
+        // Verifica se os resultados dos testes foram logados corretamente
+        expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining("Resultado do teste GLUCOSE: 120 mg/dL"));
+
+
+        // Verifica se a função sendMessage foi chamada para enviar o ACK
+       // hl7Protocol.createACKResponse();
+       // expect(Logger.log).toHaveBeenCalledWith(expect.stringContaining("MSA"));
+      
+
+        // Verifica o conteúdo do ACK gerado
+        const ackMessage = sendMessageSpy.mock.calls[0][0];
+        
+        expect(ackMessage[0].MSH.field0).toBe("MSH"); // Verifica o tipo da mensagem ACK
+        expect(ackMessage[0].MSH.field8).toBe("ACK^R01"); // Verifica o tipo da mensagem ACK
+        expect(ackMessage[1].MSA.field0).toBe("MSA"); // Verifica o segmento MSA
+        expect(ackMessage[1].MSA.field1).toBe("AA"); // Verifica o ID da mensagem original
+        expect(ackMessage[1].MSA.field2).toBe("123456"); // Verifica o status de sucesso
     });
     
 

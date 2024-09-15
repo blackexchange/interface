@@ -3,8 +3,8 @@ const Logger = require('./src/utils/Logger');
 
 // Configurações do dispositivo (servidor ou cliente)
 const deviceConfig = {
-    host: 'localhost',  // Endereço IP ou nome do host do dispositivo
-    port: 12345,        // Porta em que o dispositivo vai escutar ou se conectar
+    host: '127.0.0.1',  // Endereço IP ou nome do host do dispositivo
+    port: 9600,        // Porta em que o dispositivo vai escutar ou se conectar
     role: 'server',     // Defina 'server' para iniciar como servidor ou 'client' para iniciar como cliente
 };
 
