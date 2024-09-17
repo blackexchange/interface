@@ -1,8 +1,26 @@
+const { parseHL7MessageToJSON, serializeHL7MessageFromJSON, getCurrentTimestamp,getControl } = require('./src/utils/helper');
+
 const { split } = require('lodash');
 const net = require('net');
 const client = new net.Socket();
-const port = 9600;
+const port = 9601;
 const host = '127.0.0.1';
+
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function sendMessagesWithDelay(client, hl7Message) {
+    for (let index = 0; index < 1000; index++) {
+        // Envia a mensagem
+        client.write(hl7Message);
+        console.log(`Mensagem enviada ${index + 1}`);
+        
+        // Aguarda 1000ms (1 segundo) antes de enviar a próxima mensagem
+        await sleep(10);
+    }
+}
 
 client.connect(port, host, function() {
     console.log('Connected to server');
@@ -27,38 +45,38 @@ client.connect(port, host, function() {
 
     const hl7Message = '\x0B' + 
     
-    msgOriginal +
+    result +
     
     '\x1C\x0D';
 
-    client.write(hl7Message);
+    
+    sendMessagesWithDelay(client, hl7Message);
+
 
        
 });
 
-let dataBuffer = ''; // Buffer para armazenar os dados recebidos
+let buff = ''; // Buffer para armazenar os dados recebidos
 
-client.on('data', function(data) {
-    const messageChunk = data.toString('utf8');
-    dataBuffer += messageChunk; // Acumula o chunk no buffer
+client.on('data', function(messageBuffer) {
+ //   const messageChunk = data.toString('utf8');
+   
+    if (messageBuffer[0] === 0x0B && messageBuffer[messageBuffer.length - 2] === 0x1C && messageBuffer[messageBuffer.length - 1] === 0x0D) {
+        const trimmedBuffer = messageBuffer.subarray(1, messageBuffer.length - 2);
+        const rawMessage = trimmedBuffer.toString('utf8').replace(/\n/g, '');
 
-    console.log('Received: ' + data);
+        const parsedMessage = parseHL7MessageToJSON(rawMessage);
+      //  console.log('Received: ' );
 
-
-    // Verifica se o delimitador de fim (\x1C\r) está presente
-    if (dataBuffer.includes(String.fromCharCode(0x1C) + '\r')) {
-        // Mensagem completa recebida
-
-        let a = dataBuffer.split("\r")
-        console.log('Received: ' + a);
-
-        // Processa a mensagem completa
-        // Resetar o buffer após o processamento, caso mais mensagens sejam esperadas
-        dataBuffer = '';
+        buff = '';
 
         // Encerra a conexão
-        client.end(); // kill client after server's response
+       // client.end(); // kill cli
     }
+    console.log('Received: ' );
+
+
+
 });
 
 client.on('close', function() {

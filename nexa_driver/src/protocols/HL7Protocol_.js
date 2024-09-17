@@ -1,29 +1,145 @@
-const TCPBase = require('../TCPBase'); // Classe base de comunicação TCP
-const { parseHL7MessageToJSON, serializeHL7MessageFromJSON, getCurrentTimestamp,getControl } = require('../../utils/helper');
-const Logger = require('../../utils/Logger');
+const net = require('net');
+const Logger = require('../utils/Logger');
+const { parseHL7MessageToJSON, serializeHL7MessageFromJSON , getCurrentTimestamp} = require('../utils/hl7Helper');
 
-class HL7Protocol extends TCPBase {
+
+class HL7Protocol {
     constructor(device) {
-        super(device); // Chama o construtor da classe base
+        this.device = device;
+        this.isConnected = false;
+        this.retryCount = 0;
+        this.messageQueue = [];
+        this.acknowledgementQueue = [];
+        this.timeOut = 10;
+        this.lastMessageReceived = {};
     }
-    
 
-    // Sobrescreve o método para processar as mensagens recebidas
+    // Método para iniciar conexão como cliente ou servidor com base no papel (role)
+    startTCPConnection() {
+        if (this.device.role === 'server') {
+            this.startTCPServer();
+        } else if (this.device.role === 'client') {
+            this.connectTCPClient();
+        } else {
+            Logger.log('Papel (role) desconhecido para o dispositivo (HL7)', 'ERROR');
+        }
+    }
+
+    // Método para conectar como cliente TCP
+    connectTCPClient() {
+        this.client = new net.Socket();
+
+        this.client.connect(this.device.port, this.device.host, () => {
+            this.isConnected = true;
+            Logger.log(`Conectado ao dispositivo HL7 em ${this.device.host}:${this.device.port}`);
+        });
+
+        this.client.on('data', (data) => {
+            Logger.log(`Mensagem recebida (HL7 Cliente): ${data}`);
+            this.receiveMessage(data);
+        });
+
+        this.client.on('close', () => {
+            this.isConnected = false;
+            Logger.log('Conexão encerrada (HL7)');
+        });
+
+        this.client.on('error', (err) => {
+            this.isConnected = false;
+            this.connectionErrorHandler(err);
+        });
+
+        return this.client;
+    }
+
+    // Método para iniciar um servidor TCP
+    startTCPServer() {
+        this.server = net.createServer((socket) => {
+            this.isConnected = true;
+            this.messageQueue = [];
+            Logger.log(`Cliente conectado a partir de ${socket.remoteAddress}:${socket.remotePort}`,this.device);
+
+            socket.on('data', (data) => {
+                Logger.log(`Mensagem recebida : ${data}`);
+                this.receiveMessage(data);
+
+                this.messageQueue.forEach(msg => {
+                    socket.write(msg,() => {
+                    Logger.log(`Mensagem enviada : ${msg}`);
+
+                    });
+                });
+                this.messageQueue = [];
+                
+            });
+
+            socket.on('close', () => {
+                this.isConnected = false;
+                Logger.log('Cliente desconectado (HL7 Server)');
+            });
+
+            socket.on('error', (err) => {
+                this.isConnected = false;
+                
+                this.connectionErrorHandler(err);
+            });
+        });
+
+        this.server.listen(this.device.port, this.device.host, () => {
+            Logger.log(`Servidor HL7 ouvindo em ${this.device.host}:${this.device.port}`);
+        });
+
+        this.server.on('error', (err) => {
+            Logger.log(`Erro no servidor HL7: ${err.message}`, 'ERROR');
+        });
+    }
+
+    disconnect() {
+        if (this.device.role === 'client' && this.client) {
+            this.client.destroy();
+            this.isConnected = false;
+            Logger.log('Desconectado do dispositivo HL7 (cliente)');
+        } else if (this.device.role === 'server' && this.server) {
+            this.server.close();
+            Logger.log('Servidor HL7 encerrado');
+        }
+    }
+
+    // Método para enviar uma mensagem
+    sendMessage(message) {
+        // Serializa a mensagem JSON para o formato HL7
+        const hl7Message = serializeHL7MessageFromJSON(message);
+        let formattedMessage= String.fromCharCode(0x0B) + hl7Message + String.fromCharCode(0x1C) + '\r';
+
+        Logger.log(`Mensagem enviada (HL7): ${formattedMessage}`);
+        
+        if (this.isConnected) {
+            this.messageQueue.push(formattedMessage);
+        } else {
+            Logger.log('Dispositivo não está conectado (HL7)', 'ERROR');
+        }
+    }
+
+    // Método para receber e processar mensagens HL7
     receiveMessage(data) {
         try {
             const messageBuffer = Buffer.from(data);
 
             // Verifica se a mensagem contém os delimitadores válidos
             if (messageBuffer[0] === 0x0B && messageBuffer[messageBuffer.length - 2] === 0x1C && messageBuffer[messageBuffer.length - 1] === 0x0D) {
+                // Remove os delimitadores
                 const trimmedBuffer = messageBuffer.subarray(1, messageBuffer.length - 2);
                 const rawMessage = trimmedBuffer.toString('utf8').replace(/\n/g, '');
+                //const rawMessage = parseHL7MessageToJSON(trimmedBuffer);
 
+                // Processa a mensagem HL7 usando a biblioteca hl7
                 const parsedMessage = parseHL7MessageToJSON(rawMessage);
                 this.lastMessageReceived = parsedMessage;
+             
+                Logger.log(`Mensagem decodificada (HL7): ${JSON.stringify(parsedMessage)}`);
 
-               // Logger.log(`Mensagem decodificada (HL7): ${JSON.stringify(parsedMessage)}`);
-
-                const messageType = parsedMessage?.MSH?.[0]?.field8 || '';
+                // Identifica o tipo de mensagem e chama o processador correspondente
+                const messageType = parsedMessage?.MSH[0]?.field8 || ''; // Acessa o campo 9 do segmento MSH
 
                 switch (messageType) {
                     case 'ORU^R01':
@@ -43,73 +159,26 @@ class HL7Protocol extends TCPBase {
         }
     }
 
-    async processORU_R01() {
-        const message = this.lastMessageReceived;
-        
-        // Extração direta dos campos de PID para evitar repetição
-        const patientPID = message?.PID?.[0] || {};
-        
-        // Otimização com uso de map() em vez de forEach
-        const testResults = message?.OBX?.map(result => ({
-            test: result.field3 || '',
-            value: result.field4 || '',
-            unit: result.field5 || '',
-            flags: result.field7 || '',
-        })) || [];
-    
-        // Criação dos dados finais
-        const data = {
-            patient: {
-                name: patientPID.field5 || '',
-                sex: patientPID.field8 || '', // Corrigindo o campo de sexo para field8
-                dateOfBirth: patientPID.field7 || '', // Corrigindo o campo de data de nascimento para field7
-            },
-            device: this.device,
-            barCode: message?.OBR?.[0]?.field2 || '', // Código de barras da amostra
-            sample: message?.OBR?.[0]?.field5 || '',  // Amostra
-            results: testResults,
-        };
-    
-        // Inserção assíncrona de resultados
-        await this.insertResult(data);
-    
-        // Envia mensagem de ACK
-        const ackMessage = this.createACKResponse();
+    processORU_R01() {
+        let message = this.lastMessageReceived;
+        const patientName = message.PID[0]?.field5 || ''; // No PID segmento, campo 5 está o nome do paciente
+        const testResults = message.OBX || []; // Acessa todos os segmentos OBX (resultados de observação)
+
+        Logger.log(`Nome do Paciente: ${patientName}`);
+
+        testResults.forEach(result => {
+            const testName = result.field3; // Nome do teste
+            const testValue = result.field4; // Valor do teste
+            const unit = result.field5; // Unidade do teste
+            Logger.log(`Resultado do teste ${testName}: ${testValue} ${unit}`);
+        });
+
+        // Envia o ACK
+        const ackMessage = this.createACKResponse(); // Pega o ID da mensagem original para incluir no ACK
+       
         this.sendMessage(ackMessage);
     }
-    
 
-    createACKResponse() {
-        const MSH = {
-            MSH: {
-                field0: "MSH",
-                field1: this.lastMessageReceived.MSH[0].field1,
-                field2: this.lastMessageReceived.MSH[0].field3,
-                field3: this.lastMessageReceived.MSH[0].field2,
-                field4: this.lastMessageReceived.MSH[0].field5,
-                field5: this.lastMessageReceived.MSH[0].field4,
-                field6: getCurrentTimestamp(),
-                field7: this.lastMessageReceived.MSH[0].field7,
-                field8: "ACK^R01"
-            }
-        };
-
-        const MSA = {
-            MSA: {
-                field0: "MSA",
-                field1: "AA",
-                field2: this.lastMessageReceived.MSH[0].field9,
-                field3: "SUCCESS",
-                field4: "",
-                field5: "",
-                field6: "0",
-                field7: ""
-            }
-        };
-
-        return [MSH, MSA];
-    }
-    
     processQRY_Q02() {
 
         let message = this.lastMessageReceived;
@@ -124,9 +193,6 @@ class HL7Protocol extends TCPBase {
             material:"serum",
             exams: [{exam:"EXAM1"}, {exam:"EXAM2"}, {exam:"EXAM3"}, {exam:"EXAM4"}] // Exemplo de exames
         }];
-
-        Logger.logDB(message, "IN", device, barCode,  "QUERY");
-
  
      
         // Envia o ACK
@@ -165,7 +231,7 @@ class HL7Protocol extends TCPBase {
                 field3 : this.lastMessageReceived.MSH[0].field2,
                 field4 : this.lastMessageReceived.MSH[0].field5,
                 field5 : this.lastMessageReceived.MSH[0].field4,
-                field6 : getCurrentTimestamp(),
+                field6 : this.getCurrentTimestamp(),
                 field7 : this.lastMessageReceived.MSH[0].field7,
                 field8 : "ACK^R01"}
             
@@ -197,7 +263,7 @@ class HL7Protocol extends TCPBase {
                 field3 : this.lastMessageReceived.MSH[0].field2,
                 field4 : this.lastMessageReceived.MSH[0].field5,
                 field5 : this.lastMessageReceived.MSH[0].field4,
-                field6 : getCurrentTimestamp(),
+                field6 : this.getCurrentTimestamp(),
                 field7 : this.lastMessageReceived.MSH[0].field7,
                 field8 : "QCK^Q02"}
             
@@ -231,6 +297,7 @@ class HL7Protocol extends TCPBase {
         return ackMessage;
     }
 
+    
 
     createDSRResponse(worklist) {
 
@@ -254,7 +321,7 @@ class HL7Protocol extends TCPBase {
                 field3 : this.lastMessageReceived.MSH[0].field2,
                 field4 : this.lastMessageReceived.MSH[0].field5,
                 field5 : this.lastMessageReceived.MSH[0].field4,
-                field6 : getCurrentTimestamp(),
+                field6 : this.getCurrentTimestamp(),
                 field7 : this.lastMessageReceived.MSH[0].field7,
                 field8 : "DSR^Q03"}
             
@@ -308,17 +375,49 @@ class HL7Protocol extends TCPBase {
         return drsResponse;
     }
 
-    sendMessage(message) {
-        const serializedMsg = serializeHL7MessageFromJSON(message);
-         
-        if (this.isConnected) {
-            this.messageQueue.push(getControl('SB') + serializedMsg + getControl('EB') + getControl('CR'));
-        } else {
-            Logger.log('Dispositivo não está conectado', 'ERROR');
-        }
+    async getWorkList(barCode) {
+
+      
+        Logger.log(`Buscando: ${barCode}`);
+
+        // Envia o ACK
+      //  const ackMessage = this.createDSRResponse(); // Pega o ID da mensagem original para incluir no ACK
+       
+      //  this.sendMessage(ackMessage);
     }
 
- 
+
+
+    processQueryRequest(message) {
+        Logger.log("Processando QRY^Q02...");
+        const barcode = message.OBR?.[3] || ''; // Acessa o código de barras da amostra
+        Logger.log(`Código de barras da amostra: ${barcode}`);
+
+        // Envia uma resposta QCK^Q02 (confirmação de recebimento)
+        const qckResponse = this.createQCKResponse();
+        this.sendMessage(qckResponse);
+    }
+
+
+    connectionErrorHandler(err) {
+        Logger.log(`Erro de conexão (HL7): ${err.message}`, 'ERROR');
+    }
+
+    testConnection() {
+        Logger.log('Verificando conexão com o dispositivo HL7...');
+        return this.isConnected;
+    }
+
+    setTimeout(timeout) {
+        if (this.device.role === 'client' && this.client) {
+            this.client.setTimeout(timeout, () => {
+                Logger.log('Timeout atingido na conexão HL7');
+                this.disconnect();
+            });
+        } else if (this.device.role === 'server') {
+            Logger.log('Timeout não implementado para servidor HL7', 'WARN');
+        }
+    }
 }
 
 module.exports = HL7Protocol;

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "jest",
-    "dev": "npx nodemon --trace-warnings -r ./server"
+    "dev": "npx nodemon --trace-warnings -r ./index"
   },
   "keywords": [],
   "author": "",

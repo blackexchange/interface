@@ -1,6 +1,6 @@
 // Importando os módulos dos protocolos
 //const astmProcessor = require('../protocols/ASTM/astmProcessor');
-const hl7Processor = require('../protocols/HL7/hl7Processor');
+const hl7Processor = require('../protocols/HL7/HL7Protocol');
 
 const protocolProcessors = {
    // 'ASTM': astmProcessor,
@@ -13,9 +13,9 @@ function dispatchProtocol(device, data) {
 
     if (protocolProcessors[protocol]) {
         //protocolProcessors[protocol].processData(data, device);
-        return new protocolProcessors[protocol]();
+        return new protocolProcessors[protocol](device);
     } else {
-        console.error(`Protocolo ${protocol} não é suportado para o dispositivo ${device.deviceId}`);
+        console.error(`Erro conectando dispositivo ${device.deviceId}`);
     }
 }
 

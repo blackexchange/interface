@@ -1,5 +1,5 @@
 const { connectToDatabase } = require('./services/db');
-const {manageConnections} = require('./services/connectionManager');
+const {manageConnections} = require('./services/connectTCP');
 const { monitorNewInterfaces } = require('./services/changeStreamWatcher');
 
 (async () => {

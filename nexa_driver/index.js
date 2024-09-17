@@ -1,30 +1,33 @@
 const HL7Protocol = require('./src/protocols/HL7Protocol');
 const Logger = require('./src/utils/Logger');
 
-// Configurações do dispositivo (servidor ou cliente)
-const deviceConfig = {
-    host: '127.0.0.1',  // Endereço IP ou nome do host do dispositivo
-    port: 9600,        // Porta em que o dispositivo vai escutar ou se conectar
-    role: 'server',     // Defina 'server' para iniciar como servidor ou 'client' para iniciar como cliente
-};
+// Configurações dos dispositivos
+const deviceConfigs = [
+    { host: '127.0.0.1', port: 9600, role: 'server' },
+    { host: '127.0.0.1', port: 9601, role: 'server' },
+    { host: '127.0.0.1', port: 9602, role: 'client' },
+    // Adicione mais dispositivos conforme necessário
+];
 
-function startHL7Service() {
-    // Inicializa a instância do protocolo HL7 com a configuração do dispositivo
-    const hl7Protocol = new HL7Protocol(deviceConfig);
+function startHL7Services() {
+    // Itera sobre cada dispositivo e cria uma instância independente do protocolo HL7
+    deviceConfigs.forEach((deviceConfig, index) => {
+        const hl7Protocol = new HL7Protocol(deviceConfig);
 
-    // Inicia a conexão (como cliente ou servidor, com base na configuração do dispositivo)
-    hl7Protocol.startTCPConnection();
+        // Inicia a conexão para o dispositivo específico
+        hl7Protocol.startTCPConnection();
 
-    // Verifica a conexão
-    if (hl7Protocol.testConnection()) {
-        Logger.log('Serviço HL7 iniciado com sucesso.');
-    } else {
-        Logger.log('Falha ao iniciar o serviço HL7.', 'ERROR');
-    }
+        // Verifica a conexão
+        if (hl7Protocol.testConnection()) {
+            Logger.log(`Serviço HL7 iniciado para dispositivo ${index + 1} com sucesso.`);
+        } else {
+            Logger.log(`Falha ao iniciar o serviço HL7 para dispositivo ${index + 1}.`, 'ERROR');
+        }
 
-    // Opcional: define um timeout para a conexão
-    hl7Protocol.setTimeout(30000); // Define um timeout de 30 segundos
+        // Opcional: define um timeout para a conexão
+        hl7Protocol.setTimeout(30000); // Timeout de 30 segundos
+    });
 }
 
-// Inicia o serviço HL7
-startHL7Service();
+// Inicia os serviços HL7 para todos os dispositivos
+startHL7Services();
