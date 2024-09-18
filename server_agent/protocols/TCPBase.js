@@ -8,9 +8,9 @@ class TCPBase {
     constructor(device) {
         this.device = device;
         this.isConnected = false;
-        this.lastMessageReceived = {};
         this.socket = null;
         this.index = 0;
+        this.field = device.fieldMappings;
 
         this.messageQueue = [];
     }
@@ -38,6 +38,7 @@ class TCPBase {
 
     // Método para iniciar conexão como cliente ou servidor com base no papel (role)
     startTCPConnection() {
+
         if (this.device.role === 'server') {
             this.startTCPServer();
         } else if (this.device.role === 'client') {
@@ -80,27 +81,37 @@ class TCPBase {
     }
 
     // Método para iniciar um servidor TCP
-     async sendNextMessage() {
+    async sendNextMessage() {
         if (this.index < this.messageQueue.length) {
             const message = this.messageQueue[this.index];
-
+    
             // Enviar a mensagem e usar o callback para enviar a próxima
-            const canWrite = this.socket.write(message, () => {
-                console.log(`Enviada`);
-                this.index++;
-                this.sendNextMessage(); // Chama recursivamente para enviar a próxima
-            });
+            const canWrite = this.socket.write(message, (err) => {
+                if (err) {
+                    console.error(`Erro ao enviar mensagem: ${err.message}`);
+                } else {
+                    console.log(`Mensagem enviada: ${message}`);
 
+                    Logger.logDB(message,'OUT', this.device, "", "")
+                    this.index++;
+                    this.sendNextMessage(); // Chama recursivamente para enviar a próxima
+                }
+            });
+    
             // Se o buffer do socket estiver cheio, esperar o evento 'drain'
             if (!canWrite) {
-                this.socket.once('drain', this.sendNextMessage);
+                this.socket.once('drain', () => {
+                    console.log('Buffer drenado. Continuando envio...');
+                    this.sendNextMessage(); // Continua o envio após o buffer ser drenado
+                });
             }
         } else {
             this.messageQueue = [];
-            this.index =0;
-           // this.socket.end(); // Finaliza a conexão quando todas as mensagens forem enviadas
+            this.index = 0;
+            console.log('Todas as mensagens foram enviadas.');
         }
     }
+    
     startTCPServer() {
         this.server = net.createServer((socket) => {
             this.socket = socket;
@@ -113,29 +124,7 @@ class TCPBase {
                 this.receiveMessage(data);
 
                 this.sendNextMessage();
-                /*
-            
-                // Certifique-se de que msg seja uma string ou Buffer
-                const sendMessages = (index) => {
-                    if (index >= this.messageQueue.length) {
-                        this.messageQueue = []; // Limpa a fila após enviar todas as mensagens
-                        return;
-                    }
-            
-                    const msg = this.messageQueue[index];
-                    if (typeof msg === 'string' || Buffer.isBuffer(msg)) {
-                        
-                        socket.write(msg, () => {
-                            Logger.log(`Mensagem enviada: ${msg}`);
-                            sendMessages(index + 1); // Envia a próxima mensagem
-                        });
-                    } else {
-                        Logger.log('Erro: Tentativa de enviar dado não suportado pelo socket.write()', 'ERROR');
-                        sendMessages(index + 1); // Tenta enviar a próxima mensagem mesmo em caso de erro
-                    }
-                };
-            
-                sendMessages(0); // Inicia o envio das mensagens*/
+              
             });
             
 

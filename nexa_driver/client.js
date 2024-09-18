@@ -18,7 +18,7 @@ async function sendMessagesWithDelay(client, hl7Message) {
         console.log(`Mensagem enviada ${index + 1}`);
         
         // Aguarda 1000ms (1 segundo) antes de enviar a próxima mensagem
-        await sleep(10);
+        await sleep(20);
     }
 }
 

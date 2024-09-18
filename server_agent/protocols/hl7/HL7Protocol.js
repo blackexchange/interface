@@ -11,86 +11,127 @@ class HL7Protocol extends TCPBase {
     // Sobrescreve o método para processar as mensagens recebidas
     receiveMessage(data) {
         try {
-            const messageBuffer = Buffer.from(data);
-
-            // Verifica se a mensagem contém os delimitadores válidos
-            if (messageBuffer[0] === 0x0B && messageBuffer[messageBuffer.length - 2] === 0x1C && messageBuffer[messageBuffer.length - 1] === 0x0D) {
-                const trimmedBuffer = messageBuffer.subarray(1, messageBuffer.length - 2);
-                const rawMessage = trimmedBuffer.toString('utf8').replace(/\n/g, '');
-
-                const parsedMessage = parseHL7MessageToJSON(rawMessage);
-                this.lastMessageReceived = parsedMessage;
-
-               // Logger.log(`Mensagem decodificada (HL7): ${JSON.stringify(parsedMessage)}`);
-
-                const messageType = parsedMessage?.MSH?.[0]?.field8 || '';
-
-                switch (messageType) {
-                    case 'ORU^R01':
-                        this.processORU_R01();
-                        break;
-                    case 'QRY^Q02':
-                        this.processQRY_Q02();
-                        break;
-                    default:
-                        Logger.log(`Tipo de mensagem não reconhecido: ${messageType}`, 'ERROR');
+            // Acumula o buffer de dados recebidos (supondo que o buffer seja uma propriedade da classe)
+            this.buffer = this.buffer ? Buffer.concat([this.buffer, data]) : data;
+    
+            let startIdx = this.buffer.indexOf(0x0B); // Delimitador SB (Start Block)
+            let endIdx = this.buffer.indexOf(0x1C, startIdx); // Delimitador EB (End Block)
+    
+            // Processa todas as mensagens completas no buffer
+            while (startIdx !== -1 && endIdx !== -1) {
+                // Verifica o fim da mensagem (0x1C seguido de 0x0D)
+                if (this.buffer[endIdx + 1] === 0x0D) {
+                    // Extrai a mensagem completa do buffer
+                    const messageBuffer = this.buffer.slice(startIdx, endIdx + 2); // Inclui 0x0D
+    
+                    // Remove a mensagem processada do buffer
+                    this.buffer = this.buffer.slice(endIdx + 2);
+    
+                    // Processa a mensagem HL7
+                    this.processMessage(messageBuffer);
+                } else {
+                    break; // Aguarda mais dados se 0x0D não for encontrado após 0x1C
                 }
-            } else {
-                throw new Error("Mensagem recebida não contém delimitadores válidos de início e fim");
+    
+                // Procura a próxima mensagem
+                startIdx = this.buffer.indexOf(0x0B); 
+                endIdx = this.buffer.indexOf(0x1C, startIdx);
             }
         } catch (err) {
             Logger.log(`Erro ao processar recebimento de mensagem HL7: ${err.message}`, 'ERROR');
         }
     }
 
-    async processORU_R01() {
-        const message = this.lastMessageReceived;
+    processMessage(messageBuffer) {
+        try {
+            const trimmedBuffer = messageBuffer.subarray(1, messageBuffer.length - 2);
+            const rawMessage = trimmedBuffer.toString('utf8').replace(/\n/g, '');
+    
+            // Converte a mensagem HL7 para JSON
+            const parsedMessage = parseHL7MessageToJSON(rawMessage);
+           // this.lastMessageReceived = parsedMessage;
+    
+            const messageType = parsedMessage?.MSH?.[0]?.field8 || '';
+    
+            switch (messageType) {
+                case 'ORU^R01':
+                    this.processORU_R01(parsedMessage);
+                    break;
+                case 'QRY^Q02':
+                    this.processQRY_Q02();
+                    break;
+                default:
+                    Logger.log(`Tipo de mensagem não reconhecido: ${messageType}`, 'ERROR');
+            }
+        } catch (err) {
+            Logger.log(`Erro ao processar a mensagem HL7: ${err.message}`, 'ERROR');
+        }
+    }
+
+    getField(segment, fieldMapping) {
+        return segment?.[`field${fieldMapping}`] || ''; // Acessa o campo com base no índice, como "field5"
+    }
+
+    async processORU_R01(message) {
         
         // Extração direta dos campos de PID para evitar repetição
         const patientPID = message?.PID?.[0] || {};
         
         // Otimização com uso de map() em vez de forEach
         const testResults = message?.OBX?.map(result => ({
-            test: result.field3 || '',
-            value: result.field4 || '',
-            unit: result.field5 || '',
-            flags: result.field7 || '',
+            test: this.getField(result,this.field.test),
+            value:this.getField( result,this.field.value),
+            unit: this.getField(result,this.field.unit),
+            flags:this.getField( result,this.field.flags),
         })) || [];
     
         // Criação dos dados finais
         const data = {
             patient: {
-                name: patientPID.field5 || '',
-                sex: patientPID.field8 || '', // Corrigindo o campo de sexo para field8
-                dateOfBirth: patientPID.field7 || '', // Corrigindo o campo de data de nascimento para field7
+                name: this.getField(patientPID, this.field.patientName),
+                sex:  this.getField(patientPID,this.field.sex) , // Corrigindo o campo de sexo para field8
+                dateOfBirth: this.getField(patientPID, this.field.dateOfBirth ), // Corrigindo o campo de data de nascimento para field7
             },
             device: this.device,
-            barCode: message?.OBR?.[0]?.field2 || '', // Código de barras da amostra
-            sample: message?.OBR?.[0]?.field5 || '',  // Amostra
+            barCode: this.getField(message?.OBR?.[0],this.field.barCode), // Código de barras da amostra
+            sampleType:  this.getField(message?.OBR?.[0],this.field.sampleType),  // Amostra
             results: testResults,
         };
-    
+        const ackMessage = this.createACKResponse(message);
+        this.sendMessage(ackMessage);    
         // Inserção assíncrona de resultados
         await this.insertResult(data);
     
         // Envia mensagem de ACK
-        const ackMessage = this.createACKResponse();
-        this.sendMessage(ackMessage);
+
     }
     
 
-    createACKResponse() {
+    createACKResponse(message) {
         const MSH = {
             MSH: {
                 field0: "MSH",
-                field1: this.lastMessageReceived.MSH[0].field1,
-                field2: this.lastMessageReceived.MSH[0].field3,
-                field3: this.lastMessageReceived.MSH[0].field2,
-                field4: this.lastMessageReceived.MSH[0].field5,
-                field5: this.lastMessageReceived.MSH[0].field4,
+                field1: message.MSH[0].field1,
+                field2: message.MSH[0].field3,
+                field3: message.MSH[0].field2,
+                field4: message.MSH[0].field5,
+                field5: message.MSH[0].field4,
                 field6: getCurrentTimestamp(),
-                field7: this.lastMessageReceived.MSH[0].field7,
-                field8: "ACK^R01"
+                field7: message.MSH[0].field7,
+                field8: "ACK^R01",
+                field9: message.MSH[0].field9,
+                field10: message.MSH[0].field10,
+                field11: message.MSH[0].field11,
+                field12: message.MSH[0].field12,
+                field13: message.MSH[0].field13,
+                field14: message.MSH[0].field14,
+                field15: message.MSH[0].field15,
+                field16: message.MSH[0].field16,
+                field17: message.MSH[0].field17,
+                field18: message.MSH[0].field18,
+                field19: message.MSH[0].field19,
+                field20: message.MSH[0].field20,
+
             }
         };
 
@@ -98,7 +139,7 @@ class HL7Protocol extends TCPBase {
             MSA: {
                 field0: "MSA",
                 field1: "AA",
-                field2: this.lastMessageReceived.MSH[0].field9,
+                field2: message.MSH[0].field9,
                 field3: "SUCCESS",
                 field4: "",
                 field5: "",
@@ -110,9 +151,8 @@ class HL7Protocol extends TCPBase {
         return [MSH, MSA];
     }
     
-    processQRY_Q02() {
+    processQRY_Q02(message) {
 
-        let message = this.lastMessageReceived;
         const amostra = message.QRD[0]?.field8 || ''; // No PID segmento, campo 5 está o nome do paciente
 
         Logger.log(`Query: ${amostra}`);
@@ -142,9 +182,8 @@ class HL7Protocol extends TCPBase {
         }
     }
 
-    processDSR_Q03(worklist) {
+    processDSR_Q03(worklist, message) {
 
-        let message = this.lastMessageReceived;
         const barCode = message.QRD[0]?.field8 || ''; // No PID segmento, campo 5 está o nome do paciente
 
         Logger.log(`Amostra: ${barCode}`);
@@ -153,21 +192,35 @@ class HL7Protocol extends TCPBase {
         const dsrResponse = this.createDSRResponse(worklist); // Pega o ID da mensagem original para incluir no ACK
 
         this.sendMessage(dsrResponse);
+        
 
     }
 
-    createACKResponse() {
+    createACKResponse(message) {
         let MSH = {
             MSH:{
                 field0 : "MSH",
-                field1 : this.lastMessageReceived.MSH[0].field1,
-                field2 : this.lastMessageReceived.MSH[0].field3,
-                field3 : this.lastMessageReceived.MSH[0].field2,
-                field4 : this.lastMessageReceived.MSH[0].field5,
-                field5 : this.lastMessageReceived.MSH[0].field4,
+                field1 : message.MSH[0].field1,
+                field2 : message.MSH[0].field3,
+                field3 : message.MSH[0].field2,
+                field4 : message.MSH[0].field5,
+                field5 : message.MSH[0].field4,
                 field6 : getCurrentTimestamp(),
-                field7 : this.lastMessageReceived.MSH[0].field7,
-                field8 : "ACK^R01"}
+                field7 : message.MSH[0].field7,
+                field8 : "ACK^R01",
+                field9: message.MSH[0].field9,
+                field10: message.MSH[0].field10,
+                field11: message.MSH[0].field11,
+                field12: message.MSH[0].field12,
+                field13: message.MSH[0].field13,
+                field14: message.MSH[0].field14,
+                field15: message.MSH[0].field15,
+                field16: message.MSH[0].field16,
+                field17: message.MSH[0].field17,
+                field18: message.MSH[0].field18,
+                field19: message.MSH[0].field19,
+                field20: message.MSH[0].field20
+            }
             
         };            
 
@@ -175,7 +228,7 @@ class HL7Protocol extends TCPBase {
         let MSA = { "MSA":{
             field0:"MSA",
             field1:"AA",
-            field2: this.lastMessageReceived.MSH[0].field9,
+            field2: message.MSH[0].field9,
             field3:"SUCCESS",
             field4:"",
             field5:"",

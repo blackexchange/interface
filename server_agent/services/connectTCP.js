@@ -11,36 +11,12 @@ function openPortForDevice(device, name) {
 
     protocolProcessor.startTCPServer();
 
-    /*
-    const server = net.createServer((socket) => handleDeviceConnection(socket, protocolProcessor, device));
-
-    server.listen(device.port, device.ip, () => {
-      console.log(`${name}/${device.protocol} escutando em ${device.ip}:${device.port}`);
-    });
-
-    server.on('error', (err) => {
-      console.error(`Erro ao abrir a porta: ${err.message}`);
-    });
-    */
+  
 
   } else if (device.role === 'client') {
     // Criar um cliente TCP
     protocolProcessor.startTCPConnection();
-/*
-    const client = new net.Socket();
 
-    client.connect(device.port, device.ip, () => {
-      console.log(`${name}/${device.protocol} conectado em ${device.ip}:${device.port}`);
-      handleDeviceConnection(client, protocolProcessor, device); // Chama a função para processar os dados
-    });
-
-    client.on('error', (err) => {
-      console.error(`Erro ao conectar ao servidor: ${err.message}`);
-    });
-
-  } else {
-    Logger.log('Papel (role) desconhecido para o dispositivo', 'ERROR');
-  }*/
 }
 }
 
