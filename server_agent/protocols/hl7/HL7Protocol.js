@@ -60,6 +60,9 @@ class HL7Protocol extends TCPBase {
                 case 'QRY^Q02':
                     this.processQRY_Q02(parsedMessage);
                     break;
+                case 'ACK^Q03':
+                    this.processACK_Q03(parsedMessage);
+                    break;
                 default:
                     Logger.log(`Tipo de mensagem não reconhecido: ${messageType}`, 'ERROR');
             }
@@ -119,9 +122,8 @@ class HL7Protocol extends TCPBase {
 
             const requestMsg = this.createDSRResponse(orders,message);
             this.sendMessage(requestMsg); 
+            this.lastSentMessage = requestMsg;
             this.sendNextMessage();
-
-            
 
         }else{
             
@@ -133,6 +135,17 @@ class HL7Protocol extends TCPBase {
   
 
     }
+
+    async processACK_Q03(message) {
+        
+        // Extração direta dos campos de PID para evitar repetição
+        const barCode = message?.QRD?.[0].field8 || {};
+        
+        const orders = await this.getTestOrders(barCode);
+  
+
+    }
+    
     
 
     createACKResponse(message) {
@@ -179,36 +192,7 @@ class HL7Protocol extends TCPBase {
         return [MSH, MSA];
     }
     
-    processQRY_Q022(message) {
 
-        const amostra = message.QRD[0]?.field8 || ''; // No PID segmento, campo 5 está o nome do paciente
-
-        Logger.log(`Query: ${amostra}`);
-
-        const worklist = [{
-            barCode: "12212",
-            name: "ROnaldo",
-            sex:"M",
-            material:"serum",
-            exams: [{exam:"EXAM1"}, {exam:"EXAM2"}, {exam:"EXAM3"}, {exam:"EXAM4"}] // Exemplo de exames
-        }];
-
-        Logger.logDB(message, "IN", device, barCode,  "QUERY");
-
- 
-     
-        // Envia o ACK
-        const ackMessage = this.createQCKResponse(worklist.length>0); // Pega o ID da mensagem original para incluir no ACK
-       
-        this.sendMessage(ackMessage);
-
-        if (worklist.length>0){
-
-            this.processDSR_Q03(worklist[0]);
-
-
-        }
-    }
 
     processDSR_Q03(worklist, message) {
 
