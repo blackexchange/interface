@@ -20,7 +20,9 @@ const deviceSchema = new mongoose.Schema({
     mode: { type: String, enum: ["TCP", "SERIAL", "FILE"], required: true },
     protocol: { type: String, enum: ["HL7", "ASTM", "OTHERS"] },
     fieldMappings: { type: fieldMappingsSchema, default: () => ({}) },
-    status: { type: String, required: true, enum: ['active', 'inactive'] }
+    status: { type: String, required: true, enum: ['active', 'inactive'] },
+    isOnline: { type: Boolean, required: true, enum: ['true', 'false'], default:false },
+
 });
 
 

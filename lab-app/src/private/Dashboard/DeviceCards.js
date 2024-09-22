@@ -73,7 +73,7 @@ function DeviceCards({ devices }) {
                     </div>
                     <p className="mb-1">
                       <span className="fw-bold">
-                        {device.ip}:{device.port}
+                        {device.ip}:{device.port} | {device.isOnLine}
                       </span>
                     </p>
                     <p className="text-muted small mb-0">{interfaceItem.name}</p>

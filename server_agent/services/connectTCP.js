@@ -1,4 +1,5 @@
-const { Interface } = require('../models/interfaceModel');
+const interfaceRepository = require('../repositories/InterfaceRepository');
+
 const { dispatchProtocol } = require('../utils/protocolDispatcher');
 const Logger = require('../utils/Logger'); // Incluindo o Logger se necessário
 
@@ -9,18 +10,11 @@ function openPortForDevice(device, name) {
   const protocolProcessor = dispatchProtocol(device);
 
   if (device.role === 'server') {
-    // Criar um servidor TCP
-  
-
     protocolProcessor.startTCPServer();
-
-  
-
   } else if (device.role === 'client') {
-    // Criar um cliente TCP
     protocolProcessor.startTCPConnection();
-
-}
+  }
+  
 }
 
 
@@ -30,7 +24,8 @@ async function manageConnections() {
 
   try {
     // Buscando todas as interfaces com dispositivos ativos
-    const activeInterfaces = await Interface.find({ 'devices.status': 'active' }).exec();
+    //const activeInterfaces = await interfaceRepository.find({ 'devices.status': 'active' }).exec();
+    const activeInterfaces =  interfaceRepository.getActiveDevices();
     if (activeInterfaces.length === 0) {
       console.log("Nenhuma interface ativa encontrada.");
       return;

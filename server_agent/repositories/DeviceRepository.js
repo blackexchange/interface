@@ -8,4 +8,6 @@ class DeviceRepository {
         const devices = await this.db.query("SELECT * FROM dispositivos");
         return devices.rows; // Supondo que seja um retorno de um banco relacional
     }
+
+   
 }

@@ -1,6 +1,9 @@
 const net = require('net');
 const Logger = require('../utils/Logger');
 const resultRepository = require('../repositories/ResultRepository');
+const interfacRepository = require('../repositories/InterfaceRepository');
+const { Interface } = require('../models/interfaceModel');
+
 
 const { getCurrentTimestamp } = require('../utils/helper');
 
@@ -59,6 +62,9 @@ class TCPBase {
 
         this.client.connect(this.device.port, this.device.ip, () => {
             this.isConnected = true;
+            interfacRepository.setDeviceOnline(this.device._id,true);
+           
+
             Logger.log(`Conectado ao dispositivo em ${this.device.ip}:${this.device.port}`);
         });
 
@@ -69,11 +75,15 @@ class TCPBase {
 
         this.client.on('close', () => {
             this.isConnected = false;
+            interfacRepository.setDeviceOnline(this.device._id,false);
+
             Logger.log('Conexão encerrada (TCP Cliente)');
         });
 
         this.client.on('error', (err) => {
             this.isConnected = false;
+            interfacRepository.setDeviceOnline(this.device._id,false);
+
             this.connectionErrorHandler(err);
         });
 
