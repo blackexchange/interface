@@ -16,11 +16,20 @@ function InterfaceForm() {
         model: '',
         code: '',
         area: '',
-        protocol: '',
-        testLevel: '',
         exams: [],
-        active: false,
-        actualSetup: '',
+        devices:[],
+        actualSetup:'',
+        active: false
+    });
+
+    const [currentDevice, setCurrentDevice] = useState({
+        deviceId: '',
+        ip: '127.0.0.1',
+        port: '',
+        role: 'client',
+        mode: 'TCP',
+        protocol: 'HL7',
+        status: 'active'
     });
 
     const [currentExam, setCurrentExam] = useState({ code: '', test:'', param:'', material: '', method:'' });
@@ -51,20 +60,43 @@ function InterfaceForm() {
         }
     }, [id, token]);
 
+    function addDevice() {
+        if (!currentDevice.deviceId || !currentDevice.ip || !currentDevice.port) {
+            setNotification({ type: 'error', text: 'Please provide valid device details.' });
+            return;
+        }
+        setEquipment(prevState => ({
+            ...prevState,
+            devices: [...prevState.devices, currentDevice]
+        }));
+        setCurrentDevice({
+            deviceId: '',
+            ip: '',
+            port: '',
+            role: '',
+            mode: '',
+            protocol: '',
+            status: 'active'
+        });
+    }
+
+    function removeDevice(index) {
+        setEquipment(prevState => ({
+            ...prevState,
+            devices: prevState.devices.filter((_, i) => i !== index)
+        }));
+    }
+
     function handleInputChange(event) {
         const { name, value } = event.target;
         setEquipment(prevState => ({ ...prevState, [name]: value }));
     }
 
-    function handleExamChange(index, event) {
+   
+    function handleDeviceChange(event) {
         const { name, value } = event.target;
-        const updatedExams = equipment.exams.map((exam, i) => 
-            i === index ? { ...exam, [name]: value } : exam
-        );
-        setEquipment(prevState => ({ ...prevState, exams: updatedExams }));
-        
+        setCurrentDevice(prevState => ({ ...prevState, [name]: value }));
     }
-
 
     function addExam() {
         
@@ -139,7 +171,7 @@ function InterfaceForm() {
                                             name="code"
                                             value={equipment.code}
                                             onChange={handleInputChange}
-                                            required
+                                            
                                         />
                                     </div>
                                     <div className="col-md-4 mb-3">
@@ -151,7 +183,7 @@ function InterfaceForm() {
                                             name="name"
                                             value={equipment.name}
                                             onChange={handleInputChange}
-                                            required
+                                            
                                         />
                                     </div>
                                     <div className="col-md-3 mb-3">
@@ -179,7 +211,7 @@ function InterfaceForm() {
                                 </div>
                                 {/* Area, Protocol, Test Level */}
                                 <div className="row">
-                                    <div className="col-md-6 mb-3">
+                                    <div className="col-md-3 mb-3">
                                         <label htmlFor="area">Area</label>
                                         <select
                                             className="form-control"
@@ -195,40 +227,7 @@ function InterfaceForm() {
                                             ))}
                                         </select>
                                     </div>
-                                    <div className="col-md-3 mb-3">
-                                        <label htmlFor="protocol">Protocol</label>
-                                        <select
-                                            className="form-control"
-                                            id="protocol"
-                                            name="protocol"
-                                            value={equipment.protocol}
-                                            onChange={handleInputChange}
-                                        >
-                                            <option value="">Select</option>
-                                            {["HL7", "ASTM", "OTHERS"].map(protocol => (
-                                                <option key={protocol} value={protocol}>{protocol}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="col-md-3 mb-3">
-                                        <label htmlFor="testLevel">Test Level</label>
-                                        <select
-                                            className="form-control"
-                                            id="testLevel"
-                                            name="testLevel"
-                                            value={equipment.testLevel}
-                                            onChange={handleInputChange}
-                                        >
-                                            <option value="">Select</option>
-                                            {["1", "2", "3"].map(level => (
-                                                <option key={level} value={level}>{level}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                                    {/* Campos adicionais */}
-                                    <div className="row">
-                                    <div className="col-md-12 mb-3">
+                                    <div className="col-md- mb-3">
                                         <label htmlFor="actualSetup">Actual Setup</label>
                                         <input
                                             type="text"
@@ -239,8 +238,11 @@ function InterfaceForm() {
                                             onChange={handleInputChange}
                                         />
                                     </div>
-                                  
+                                    
+                                    
                                 </div>
+                                    {/* Campos adicionais */}
+                                  
                                 <hr />
 
                                 {/* Seleção e Adição de Exames */}
@@ -319,7 +321,113 @@ function InterfaceForm() {
                                         </ul>
                                     </div>
                                 </div>
+                                <hr />
 
+                                <h5>Devices</h5>
+                                <div className="row">
+                                    <div className="col-md-2 mb-3">
+                                        <label htmlFor="deviceId">Device ID</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="deviceId"
+                                            name="deviceId"
+                                            value={currentDevice.deviceId}
+                                            onChange={handleDeviceChange}
+                                            
+                                        />
+                                    </div>
+                                    <div className="col-md-2 mb-3">
+                                        <label htmlFor="ip">IP Address</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="ip"
+                                            name="ip"
+                                            value={currentDevice.ip}
+                                            onChange={handleDeviceChange}
+                                            
+                                        />
+                                    </div>
+                                    <div className="col-md-2 mb-3">
+                                        <label htmlFor="port">Port</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="port"
+                                            name="port"
+                                            value={currentDevice.port}
+                                            onChange={handleDeviceChange}
+                                            
+                                        />
+                                    </div>
+                                    <div className="col-md-2 mb-3">
+                                        <label htmlFor="role">Role</label>
+                                        <select
+                                            className="form-control"
+                                            id="role"
+                                            name="role"
+                                            value={currentDevice.role}
+                                            onChange={handleDeviceChange}
+                                        >
+                                            <option value="client">Client</option>
+                                            <option value="server">Server</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-md-2 mb-3">
+                                        <label htmlFor="mode">Mode</label>
+                                        <select
+                                            className="form-control"
+                                            id="mode"
+                                            name="mode"
+                                            value={currentDevice.mode}
+                                            onChange={handleDeviceChange}
+                                        >
+                                            <option value="TCP">TCP</option>
+                                            <option value="SERIAL">Serial</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-md-2 mb-3">
+                                        <label htmlFor="protocol">Protocol</label>
+                                        <select
+                                            className="form-control"
+                                            id="protocol"
+                                            name="protocol"
+                                            value={currentDevice.protocol}
+                                            onChange={handleDeviceChange}
+                                        >
+                                            <option value="HL7">HL7</option>
+                                            <option value="ASTM">ASTM</option>
+                                            <option value="OTHERS">OTHERS</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-md-2 mb-3">
+                                        <label htmlFor="status">Status</label>
+                                        <select
+                                            className="form-control"
+                                            id="status"
+                                            name="status"
+                                            value={currentDevice.status}
+                                            onChange={handleDeviceChange}
+                                        >
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-md-3 mb-3">
+                                        <button type="button" className="btn btn-secondary mt-4" onClick={addDevice}>Add Device</button>
+                                    </div>
+                                </div>
+
+                                {/* Render the list of devices */}
+                                <ul className="list-group">
+                                    {equipment.devices.map((device, index) => (
+                                        <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                                            {device.deviceId} ({device.ip}:{device.port})
+                                            <button type="button" className="btn btn-danger btn-sm" onClick={() => removeDevice(index)}>Remove</button>
+                                        </li>
+                                    ))}
+                                </ul>
                             
                                
 

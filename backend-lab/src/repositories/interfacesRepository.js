@@ -14,9 +14,22 @@ function deleteInterface(id, session) {
     return Interface.findByIdAndDelete(id).session(session).exec();
 }
 
-function getInterfaceByCondition(condition) {
-    return Interface.find(condition).exec();
-}
+async function getInterfaceByCondition(condition) {
+    try {
+        // Log para verificar o que está sendo passado
+
+
+        const result = await Interface.aggregate(
+            condition, { allowDiskUse: true }
+            
+            ).exec();
+        return result;
+    
+      } catch (error) {
+        console.error('Erro ao buscar dispositivos ativos:', error);
+      }
+};
+
 
 function getInterfaceById(id) {
     return Interface.findById(id).exec();
@@ -27,7 +40,7 @@ function getInterfaceById(id) {
 async function updateInterface(id, newObj) {
     try {
         // Encontrar o paciente pelo ID e atualizar com os novos dados
-        const updatedPatient = await Interface.findOneAndUpdate(
+        const updatedInterface = await Interface.findOneAndUpdate(
             { _id: id }, // Filtro para encontrar o paciente pelo ID
             { $set: newObj }, // Atualizar os campos com os novos dados
             { new: true } // 'new: true' retorna o documento atualizado

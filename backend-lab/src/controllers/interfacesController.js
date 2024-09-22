@@ -41,12 +41,29 @@ async function getInterfaces(req, res, next) {
     }
 }
 
+async function getInterfacesByCondition(req, res, next) {
+    try {
+        const condition = req.body;
+        
+        if (!Array.isArray(condition) || condition.length === 0) {
+            return res.status(400).json({ message: 'Pipeline de agregação está vazio ou mal formatado' });
+        }
+        const interfaces = await interfacesRepository.getInterfaceByCondition(condition);
+
+        
+        res.json(interfaces);
+    } catch (err) {
+        logger('system', err);
+        res.status(500).json({ message: err.message });
+    }
+}
+
 
 
 async function updateInterface(req, res, next) {
     const { id } = req.params;
     try {
-        const update = await patientsRepository.updateInterface(id, req.body);
+        const update = await interfacesRepository.updateInterface(id, req.body);
 
         if (!update.success){
             return res.status(404).json({ message: update.error });
@@ -63,7 +80,7 @@ async function updateInterface(req, res, next) {
 async function deleteInterface(req, res, next) {
     const { id } = req.params;
     try {
-        const deleted = await patientsRepository.deleteInterface(patientId);
+        const deleted = await interfacesRepository.deleteInterface(patientId);
         if (!deleted) {
             return res.status(404).json({ message: "Interface not found" });
         }
@@ -81,5 +98,6 @@ module.exports = {
     getInterfaces,
     updateInterface,
     deleteInterface,
-    getInterface
+    getInterface,
+    getInterfacesByCondition
 };

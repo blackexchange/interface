@@ -1,12 +1,13 @@
-const { Interface } = require('../models/interfaceModel'); // Modelo da interface
-const { openPortForDevice } = require('./connectionManager'); // Função que abre as portas
+const { InterfaceResult } = require('../models/interfaceResultsModel'); // Modelo da interface
+//const { openPortForDevice } = require('./connectionManager'); // Função que abre as portas
+const { sendMessage } = require('../app-em');
 
 
 // Função para iniciar o monitoramento de mudanças no MongoDB
 async function monitorNewInterfaces() {
     try {
         // Monitora mudanças na coleção "Interface"
-        const changeStream = Interface.watch();
+        const changeStream = InterfaceResult.watch();
 
         console.log("Monitorando mudanças na coleção de interfaces...");
 
@@ -14,15 +15,12 @@ async function monitorNewInterfaces() {
         changeStream.on('change', (change) => {
             if (change.operationType === 'insert') {
                 const newInterface = change.fullDocument;
+                
 
                 console.log(`Nova interface detectada: ${newInterface.name}`);
+                sendMessage({notification: `Nova interface detectada:`});
 
-                // Abre a porta para cada dispositivo ativo da nova interface
-                newInterface.devices.forEach((device) => {
-                    if (device.status === 'active') {
-                        openPortForDevice(device); // Abre a porta automaticamente
-                    }
-                });
+              
             }
 
             if (change.operationType === 'update') {

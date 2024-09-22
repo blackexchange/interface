@@ -6,6 +6,8 @@ const interfacesController = require('../controllers/interfacesController');
 // Rota para criar um novo paciente
 router.get('/', interfacesController.getInterfaces);
 
+router.post('/devices', interfacesController.getInterfacesByCondition);
+
 router.post('/', interfacesController.createInterface);
 
 // Rota para obter um paciente específico por ID

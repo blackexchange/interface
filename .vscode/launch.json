@@ -15,6 +15,24 @@
             ],
             "program": "${workspaceFolder}\\server_agent\\server.js"
         },
+
+        
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Frontend",
+            "runtimeExecutable": "npm",   // Executa o npm
+            "runtimeArgs": ["start"],    // Passa o comando 'start' para npm
+            "skipFiles": ["<node_internals>/**"],
+            "console": "integratedTerminal", // Usa o terminal integrado para a saída
+            "cwd": "${workspaceFolder}/lab-app",  
+            "env": {
+                "NODE_ENV": "development"   // Define variáveis de ambiente, se necessário
+            },
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/**/*.js"]
+        },
+        
         {
         
             "type": "node",

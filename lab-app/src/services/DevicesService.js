@@ -36,14 +36,3 @@ export async function deleteEquipment(token, id) {
     const response = await axios.delete(`${EQUIPMENTS_URL}${id}/`, { headers });
     return response.data;
 }
-
-export async function getActiveDevices(condition) {
-    const token = localStorage.getItem('token');
-    const headers = { 
-        'authorization': token ,
-        'Content-Type': 'application/json'
-    };
-    const response = await axios.post(`${EQUIPMENTS_URL}/devices` , condition, { headers });
-
-    return response.data;
-}

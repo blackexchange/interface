@@ -1,0 +1,70 @@
+PORT=3000
+
+#ex: mysecret
+JWT_SECRET=mysecret
+
+
+#ex: 1800 = 30min
+JWT_EXPIRES=18000
+
+#database configs
+DB_NAME=beholder_db
+DB_USER=root
+DB_PWD=root
+DB_HOST=host.docker.internal
+DB_PORT=3306
+DB_DIALECT=mysql
+DB_LOGS=false
+
+#aes key. 32 characters
+AES_KEY=84164678901234567890123456717520
+
+#front address. ex: *
+CORS_ORIGIN=*
+
+#ex: true
+BINANCE_LOGS=false
+
+#ex: true
+BEHOLDER_LOGS=false
+
+#ex: 60000
+AUTOMATION_INTERVAL=60000
+
+#ex: 1
+DEFAULT_SETTINGS_ID=1
+
+#ex: https://api.binance.com/sapi/v1/
+# https://testnet.binance.vision/api
+BINANCE_SAPI_URL=https://testnet.binance.vision/api
+
+#ex: production
+NODE_ENV=development
+
+#ex: contato@luiztools.com.br
+DEFAULT_SETTINGS_EMAIL=rodneyneville@gmail.com
+
+#ex: 123456
+DEFAULT_SETTINGS_PWD=12345
+
+#ex: <sua accesss key>
+DEFAULT_SETTINGS_ACCESS_KEY="KJLfIOW0kxt2M32S7VrCaoQeO4Ms6M7xkgwLNhBJuXh4dZlqMipYyTBQGayf1w2A"
+
+#ex: <sua secret key>
+DEFAULT_SETTINGS_SECRET_KEY="UH34arYZY1TqdpBFIig4exdzJnzXne1dUBNklXYwWE6DG2d4oVL6e8RVG3IqRlHo"
+
+#ex: false
+INCOMPLETE_CANDLES=false
+
+#ex: false
+BINANCE_BLVT=false
+
+#ex: AUD,GBP,EUR,NGN,RUB,UAH,TRY,BKRW,BIDR,ZAR,BVND
+IGNORED_COINS=AUD,GBP,EUR,NGN,RUB,UAH,TRY,BKRW,BIDR,ZAR,BVND
+
+
+
+
+#MYSQL
+
+MYSQL_FLAGS="?allowPublicKeyRetrieval=true&useSSL=false"

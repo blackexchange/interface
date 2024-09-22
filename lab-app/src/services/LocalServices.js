@@ -3,6 +3,8 @@ export function getLocalExams() {
 
     if (storedExams) {
         storedExams =  JSON.parse(storedExams)[0].exams;
+    console.log(storedExams)
+
         const examNames = storedExams.map(s => ({ _id: s._id, code: s.code, name: s.name, material: s.material }));
         return examNames;
     } else {

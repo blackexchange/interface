@@ -1,6 +1,7 @@
 const patientsRepository = require('../repositories/patientsRepository');
 const logger = require('../utils/logger');
 
+
 async function getPatient(req, res, next) {
     const { patientId } = req.params;
     try {
@@ -31,7 +32,6 @@ async function createPatient(req, res, next) {
             ...req.body,
             createdBy: res.locals.userId,  // Adiciona o ID do usuário que enviou a requisição
         };
-    
         const newPatient = await patientsRepository.createPatients(data);
         res.status(201).json(newPatient);
     } catch (err) {

@@ -12,7 +12,7 @@ function InterfaceExams({ index, exam, removeExam }) {
                     type="text"
                     className="form-control me-2"
                     name="code"
-                    value={examName.name}
+                    value={exam.name}
                     disabled
                 />
                
@@ -20,7 +20,7 @@ function InterfaceExams({ index, exam, removeExam }) {
                     type="text"
                     className="form-control me-2"
                     name="test"
-                    value={exam.test}
+                    value={exam.test.code}
                     disabled
                 />
                 <input

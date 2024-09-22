@@ -1,13 +1,16 @@
-const net = require('net');
 const { Interface } = require('../models/interfaceModel');
 const { dispatchProtocol } = require('../utils/protocolDispatcher');
 const Logger = require('../utils/Logger'); // Incluindo o Logger se necessário
+
+//const enabledDevices = process.env.DEVICES_ENABLE ? process.env.DEVICES_ENABLE.split(',') : null;
+const enabledDevices = null;
 
 function openPortForDevice(device, name) {
   const protocolProcessor = dispatchProtocol(device);
 
   if (device.role === 'server') {
     // Criar um servidor TCP
+  
 
     protocolProcessor.startTCPServer();
 
@@ -20,33 +23,6 @@ function openPortForDevice(device, name) {
 }
 }
 
-
-function handleDeviceConnection(socket, protocolProcessor, device) {
-  let buffer = '';  // Armazenar os dados recebidos
-
-  
-
-  socket.on('data', async (data) => {
-    buffer += Buffer.from(data);  // Acumula os dados no buffer
-
-    // Processa os dados recebidos
-    const ret = await protocolProcessor.receiveMessage(buffer, device, socket);
-
-    // Limpa o buffer após processar (opcional, se o protocolo não for contínuo)
-    buffer = '';
-
-    sendNextMessage(socket);
-
-  });
-
-  socket.on('end', () => {
-    console.log('Dispositivo desconectado.');
-  });
-
-  socket.on('error', (err) => {
-    console.error(`Erro de socket: ${err.message}`);
-  });
-}
 
 // Função para gerenciar conexões para interfaces e dispositivos
 async function manageConnections() {
@@ -63,12 +39,11 @@ async function manageConnections() {
     // Iterando sobre as interfaces ativas
     activeInterfaces.forEach((interfaceItem) => {
       console.log(`Ativando interface: ${interfaceItem.name}`);
-
+ 
       // Iterando sobre os dispositivos de cada interface
       interfaceItem.devices.forEach((device) => {
         device = device.toObject();
-
-        if (device.status === 'active') {
+        if (device.status === 'active' && (!enabledDevices || enabledDevices.includes(device.deviceId))) {
           // Abrindo a porta para o dispositivo
           try {
             openPortForDevice(device, interfaceItem.name);

@@ -1,6 +1,9 @@
 const database = require('./db');
 const app = require('./app');
 const logger = require('./utils/logger');
+const appEm = require('./app-em');
+const appWs = require('./app-ws');
+const { monitorNewInterfaces } = require('./services/changeStreamWatcher');
 
 
 (async () => {
@@ -13,8 +16,12 @@ const logger = require('./utils/logger');
     })
 
 
-   // const wss = appWs(server);
+    const wss = appWs(server);
 
-//    appEm.init(settings, wss, beholder);
+    appEm.init(wss);
+    monitorNewInterfaces();
+
+
+
 
 })();

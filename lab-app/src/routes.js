@@ -15,6 +15,7 @@ import ExamForm from './private/Exams/ExamForm';
 import Orders from './private/Orders/Orders';
 import OrderForm from './private/Orders/OrderForm';
 
+import Dashboard from './private/Dashboard/Dashboard';
 
 
 
@@ -23,8 +24,7 @@ import OrderForm from './private/Orders/OrderForm';
 
 
 
-
-/*import Dashboard from './private/Dashboard/Dashboard';
+/*
 import Orders from './private/Orders/Orders';
 import Monitors from './private/Monitors/Monitors';
 import Automations from './private/Automations/Automations';
@@ -47,6 +47,12 @@ function Router() {
             <Routes>
 
                 <Route path="/" exact element={<Login />} />
+                <Route path='/dashboard' element={
+                    <PrivateRoute>
+                        <Dashboard />
+                    </PrivateRoute>
+                } />
+
                 <Route path='/patients' element={
                     <PrivateRoute>
                         <Patients />

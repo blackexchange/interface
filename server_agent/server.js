@@ -1,6 +1,8 @@
+require('dotenv').config();
 const { connectToDatabase } = require('./services/db');
 const {manageConnections} = require('./services/connectTCP');
 const { monitorNewInterfaces } = require('./services/changeStreamWatcher');
+
 
 (async () => {
     try {
@@ -8,10 +10,11 @@ const { monitorNewInterfaces } = require('./services/changeStreamWatcher');
 
         // Estabelece a conexão com o MongoDB
         await connectToDatabase();
-      //  monitorNewInterfaces();
+        monitorNewInterfaces();
 
         // Após a conexão, inicia o monitoramento
         manageConnections();
+
 
 
     } catch (error) {

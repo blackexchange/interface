@@ -1,5 +1,29 @@
 const mongoose = require('mongoose');
 
+const fieldMappingsSchema = new mongoose.Schema({
+    patientName: { type: String, default: "5" },
+    patientSex: { type: String, default: "8" },
+    patientDateOfBirth: { type: String, default: "7" },
+    sampleType: { type: String, default: "5" },
+    barCode: { type: String, default: "2" },
+    test: { type: String, default: "3" },
+    value: { type: String, default: "4" },
+    unit: { type: String, default: "5" },
+    flags: { type: String, default: "7" }
+  });
+
+const deviceSchema = new mongoose.Schema({
+    deviceId: { type: String, required: true },
+    ip: { type: String, required: true },
+    role:{ type: String, enum: ["server", "client"], required: true },
+    port: { type: String, required: true },
+    mode: { type: String, enum: ["TCP", "SERIAL", "FILE"], required: true },
+    protocol: { type: String, enum: ["HL7", "ASTM", "OTHERS"] },
+    fieldMappings: { type: fieldMappingsSchema, default: () => ({}) },
+    status: { type: String, required: true, enum: ['active', 'inactive'] }
+});
+
+
 const interfaceSchema = new mongoose.Schema({
     
     name: {
@@ -15,15 +39,6 @@ const interfaceSchema = new mongoose.Schema({
         required:true,
         unique: true
     },
-    devices:[
-        { deviceId: { type: String, required: true }},
-        { ip: { type: String, required: true }},
-        { port: { type: Number, required: true }},
-        { type: { type: String, required: true, enum: ['TCP', 'FILE', 'SERIAL'] }},
-        { details: { type: String }},
-        { status: { type: String, default: 'inactive', enum: ['active', 'inactive'] }}
-            
-    ],
 
     area:{
         type: String,
@@ -55,14 +70,13 @@ const interfaceSchema = new mongoose.Schema({
         ]
     },
 
-    protocol: {
-        type: String,
-        enum: ["HL7", "ASTM","OTHERS"]
-    },
+    
     testLevel: {
         type:String, 
         enum: ["1","2","3"]
     },
+
+    devices: [deviceSchema],
 
     exams:[{
         name:String, 
@@ -101,7 +115,7 @@ const interfaceSchema = new mongoose.Schema({
         default: Date.now
     }
 });
-interfaceSchema.path('code').index({unique:true});
+interfaceSchema.path('code').index();
 interfaceSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
@@ -109,4 +123,4 @@ interfaceSchema.pre('save', function (next) {
 
 const Interface = mongoose.model('Interface', interfaceSchema);
 
-module.exports = {Interface, interfaceSchema};
+module.exports = {Interface, interfaceSchema, fieldMappingsSchema};
