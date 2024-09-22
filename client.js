@@ -1,7 +1,6 @@
-const { split } = require('lodash');
 const net = require('net');
 const client = new net.Socket();
-const port = 16062;
+const port = 53008;
 const host = '127.0.0.1';
 
 client.connect(port, host, function() {
@@ -9,7 +8,7 @@ client.connect(port, host, function() {
 
     const msgOriginal =
     'MSH|^~\&|||||20240828151212||QRY^Q02|1|P|2.3.1||||||ASCII|||' +'\x0D'+
-    'QRD|20240828151212|R|D|12|||RD|004|OTH|||T|'+'\x0D' +
+    'QRD|20240828151212|R|D|12|||RD|1234567890121|OTH|||T|'+'\x0D' +
     'QRF||||||RCT|COR|ALL||';
 
 
@@ -27,7 +26,7 @@ client.connect(port, host, function() {
 
     const hl7Message = '\x0B' + 
     
-    result +
+    msgOriginal +
     
     '\x1C\x0D';
 

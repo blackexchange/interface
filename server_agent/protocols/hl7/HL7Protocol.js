@@ -49,7 +49,7 @@ class HL7Protocol extends TCPBase {
     
             // Converte a mensagem HL7 para JSON
             const parsedMessage = parseHL7MessageToJSON(rawMessage);
-           // this.lastMessageReceived = parsedMessage;
+            this.lastMessageReceived = parsedMessage;
     
             const messageType = parsedMessage?.MSH?.[0]?.field8 || '';
     
@@ -58,7 +58,7 @@ class HL7Protocol extends TCPBase {
                     this.processORU_R01(parsedMessage);
                     break;
                 case 'QRY^Q02':
-                    this.processQRY_Q02();
+                    this.processQRY_Q02(parsedMessage);
                     break;
                 default:
                     Logger.log(`Tipo de mensagem não reconhecido: ${messageType}`, 'ERROR');
@@ -103,6 +103,34 @@ class HL7Protocol extends TCPBase {
         await this.insertResult(data);
     
         // Envia mensagem de ACK
+
+    }
+
+    async processQRY_Q02(message) {
+        
+        // Extração direta dos campos de PID para evitar repetição
+        const barCode = message?.QRD?.[0].field8 || {};
+        
+        const orders = await this.getTestOrders(barCode);
+
+        if (orders.length > 0){
+            const ack = this.createQCKResponse();
+            this.sendMessage(ack); 
+
+            const requestMsg = this.createDSRResponse(orders,message);
+            this.sendMessage(requestMsg); 
+            this.sendNextMessage();
+
+            
+
+        }else{
+            
+            const response = this.createQCKResponse(true);
+            this.sendMessage(response); 
+            this.sendNextMessage();
+
+        }
+  
 
     }
     
@@ -151,7 +179,7 @@ class HL7Protocol extends TCPBase {
         return [MSH, MSA];
     }
     
-    processQRY_Q02(message) {
+    processQRY_Q022(message) {
 
         const amostra = message.QRD[0]?.field8 || ''; // No PID segmento, campo 5 está o nome do paciente
 
@@ -184,14 +212,9 @@ class HL7Protocol extends TCPBase {
 
     processDSR_Q03(worklist, message) {
 
-        const barCode = message.QRD[0]?.field8 || ''; // No PID segmento, campo 5 está o nome do paciente
 
-        Logger.log(`Amostra: ${barCode}`);
-
-
-        const dsrResponse = this.createDSRResponse(worklist); // Pega o ID da mensagem original para incluir no ACK
-
-        this.sendMessage(dsrResponse);
+        const dsrResponse = this.createDSRResponse(worklist,message); // Pega o ID da mensagem original para incluir no ACK
+        //this.sendMessage(dsrResponse);
         
 
     }
@@ -242,6 +265,7 @@ class HL7Protocol extends TCPBase {
     }
 
     createQCKResponse(noexam = false) {
+        console.log(`${noexam ? "NF":"OK"}`)
         let MSH = {
             MSH:{
                 field0 : "MSH",
@@ -285,16 +309,16 @@ class HL7Protocol extends TCPBase {
     }
 
 
-    createDSRResponse(worklist) {
+    createDSRResponse(worklist,message) {
 
-        const totalExam =worklist.exams.length; 
-        const examList = worklist.exams.map((exam, index) => {
+        const totalExam = worklist[0].orderItens.length; 
+        const examList = worklist[0].orderItens.map((exam, index) => {
             return {DSP:{
                     field0: "DSP",
                     field1: (29 + index).toString(), // Incrementa a partir de 29
                     field2: "",
                     field3: "",
-                    field4: exam.exam + "^^^", // Insere o nome do exame no field4
+                    field4: exam.examCode + "^^^", // Insere o nome do exame no field4
                     field5: ""
             }};
         });
@@ -302,23 +326,23 @@ class HL7Protocol extends TCPBase {
         const MSH = {
             MSH:{
                 field0 : "MSH",
-                field1 : this.lastMessageReceived.MSH[0].field1,
-                field2 : this.lastMessageReceived.MSH[0].field3,
-                field3 : this.lastMessageReceived.MSH[0].field2,
-                field4 : this.lastMessageReceived.MSH[0].field5,
-                field5 : this.lastMessageReceived.MSH[0].field4,
+                field1 : message.MSH[0].field1,
+                field2 : message.MSH[0].field3,
+                field3 : message.MSH[0].field2,
+                field4 : message.MSH[0].field5,
+                field5 : message.MSH[0].field4,
                 field6 : getCurrentTimestamp(),
-                field7 : this.lastMessageReceived.MSH[0].field7,
+                field7 : message.MSH[0].field7,
                 field8 : "DSR^Q03"}
             
         };   
 
         const QRD = {
-            QRD:this.lastMessageReceived.QRD[0]
+            QRD:message.QRD[0]
         };  
 
         const QRF = {
-            QRF:this.lastMessageReceived.QRF[0]
+            QRF:message.QRF[0]
         };   
         
         let DSP = [
@@ -353,9 +377,6 @@ class HL7Protocol extends TCPBase {
         ];
         DSP = DSP.concat(examList, { DSC: { field0: "DSC", field1: `${totalExam + 29}`, field2: "" } });
         
-
-
-       
         const drsResponse =[MSH,QRD,QRF,DSP];
         
         return drsResponse;

@@ -3,7 +3,7 @@ const { parseHL7MessageToJSON, serializeHL7MessageFromJSON, getCurrentTimestamp,
 const { split } = require('lodash');
 const net = require('net');
 const client = new net.Socket();
-const port = 9601;
+const port = 53008;
 const host = '127.0.0.1';
 
 
@@ -12,7 +12,7 @@ function sleep(ms) {
 }
 
 async function sendMessagesWithDelay(client, hl7Message) {
-    for (let index = 0; index < 1000; index++) {
+    for (let index = 0; index < 1; index++) {
         // Envia a mensagem
         client.write(hl7Message);
         console.log(`Mensagem enviada ${index + 1}`);
@@ -27,7 +27,7 @@ client.connect(port, host, function() {
 
     const msgOriginal =
     'MSH|^~\&|||||20240828151212||QRY^Q02|1|P|2.3.1||||||ASCII|||' +'\x0D'+
-    'QRD|20240828151212|R|D|12|||RD|004|OTH|||T|'+'\x0D' +
+    'QRD|20240828151212|R|D|12|||RD|123456789012|OTH|||T|'+'\x0D' +
     'QRF||||||RCT|COR|ALL||';
 
 
@@ -45,7 +45,7 @@ client.connect(port, host, function() {
 
     const hl7Message = '\x0B' + 
     
-    result +
+    msgOriginal +
     
     '\x1C\x0D';
 
@@ -59,14 +59,14 @@ client.connect(port, host, function() {
 let buff = ''; // Buffer para armazenar os dados recebidos
 
 client.on('data', function(messageBuffer) {
- //   const messageChunk = data.toString('utf8');
-   
-    if (messageBuffer[0] === 0x0B && messageBuffer[messageBuffer.length - 2] === 0x1C && messageBuffer[messageBuffer.length - 1] === 0x0D) {
+    const messageChunk = messageBuffer.toString('utf8');
+    if (messageBuffer[0] === 11 && messageBuffer[messageBuffer.length - 2] === 28 && messageBuffer[messageBuffer.length - 1] === 13) {
+       
         const trimmedBuffer = messageBuffer.subarray(1, messageBuffer.length - 2);
         const rawMessage = trimmedBuffer.toString('utf8').replace(/\n/g, '');
 
         const parsedMessage = parseHL7MessageToJSON(rawMessage);
-      //  console.log('Received: ' );
+        console.log('Received: ' + JSON.stringify(parsedMessage));
 
         buff = '';
 

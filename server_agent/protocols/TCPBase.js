@@ -2,7 +2,7 @@ const net = require('net');
 const Logger = require('../utils/Logger');
 const resultRepository = require('../repositories/ResultRepository');
 const interfacRepository = require('../repositories/InterfaceRepository');
-const { Interface } = require('../models/interfaceModel');
+const labOrderRepository = require('../repositories/labOrderRepository');
 
 
 const { getCurrentTimestamp } = require('../utils/helper');
@@ -63,8 +63,6 @@ class TCPBase {
         this.client.connect(this.device.port, this.device.ip, () => {
             this.isConnected = true;
             interfacRepository.setDeviceOnline(this.device._id,true);
-           
-
             Logger.log(`Conectado ao dispositivo em ${this.device.ip}:${this.device.port}`);
         });
 
@@ -127,9 +125,13 @@ class TCPBase {
             this.socket = socket;
            
             this.isConnected = true;
+            interfacRepository.setDeviceOnline(this.device._id,true);
+
             Logger.log(`Cliente conectado a partir de ${socket.remoteAddress}:${socket.remotePort}`, this.device);
 
             socket.on('data', (data) => {
+                interfacRepository.setDeviceOnline(this.device._id,true);
+
                 Logger.logDB(data);
                 this.receiveMessage(data);
 
@@ -139,26 +141,36 @@ class TCPBase {
             
 
             socket.on('close', () => {
+                interfacRepository.setDeviceOnline(this.device._id,false);
+
                 this.isConnected = false;
                 Logger.log('Cliente desconectado (TCP Server)');
             });
             
             socket.on('end', () => {
+                interfacRepository.setDeviceOnline(this.device._id,false);
+
                 this.isConnected = false;
                 Logger.log('Cliente desconectado (TCP Server)');
             });
 
             socket.on('error', (err) => {
+                interfacRepository.setDeviceOnline(this.device._id,false);
+
                 this.isConnected = false;
                 this.connectionErrorHandler(err);
             });
         });
 
         this.server.listen(this.device.port, this.device.ip, () => {
+            interfacRepository.setDeviceOnline(this.device._id,true);
+
             Logger.log(`Servidor ouvindo em ${this.device.ip}:${this.device.port}`);
         });
 
         this.server.on('error', (err) => {
+            interfacRepository.setDeviceOnline(this.device._id,false);
+
             Logger.log(`Erro no servidor: ${err.message}`, 'ERROR');
         });
     }
@@ -192,6 +204,18 @@ class TCPBase {
     async insertResult(data){
 
         await resultRepository.createOne(data);
+
+    }
+
+    async getTestOrders(barCode){
+
+        return await labOrderRepository.getOrdersByBarcode(barCode);
+
+    }
+
+    async getWorklist(){
+
+        return await labOrderRepository.getByCondition(data);
 
     }
 }

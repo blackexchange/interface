@@ -25,7 +25,7 @@ async function manageConnections() {
   try {
     // Buscando todas as interfaces com dispositivos ativos
     //const activeInterfaces = await interfaceRepository.find({ 'devices.status': 'active' }).exec();
-    const activeInterfaces =  interfaceRepository.getActiveDevices();
+    const activeInterfaces = await  interfaceRepository.getActiveDevices();
     if (activeInterfaces.length === 0) {
       console.log("Nenhuma interface ativa encontrada.");
       return;
