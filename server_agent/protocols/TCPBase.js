@@ -41,6 +41,8 @@ class TCPBase {
 
     // Método para iniciar conexão como cliente ou servidor com base no papel (role)
     startTCPConnection() {
+        interfacRepository.setDeviceOnline(this.device._id,false);
+
 
         if (this.device.role === 'server') {
             this.startTCPServer();
@@ -148,7 +150,6 @@ class TCPBase {
             });
             
             socket.on('end', () => {
-                interfacRepository.setDeviceOnline(this.device._id,false);
 
                 this.isConnected = false;
                 Logger.log('Cliente desconectado (TCP Server)');

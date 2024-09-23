@@ -13,6 +13,9 @@ const labOrdersRouter = require('./routers/labOrdersRouter');
 const rawRouter = require('./routers/rawRouter');
 const rawController = require('./controllers/rawController');
 
+const resultsRouter = require('./routers/resultsRouter');
+
+
 
 
 require('express-async-errors');
@@ -45,6 +48,7 @@ app.use('/interfaces', isAuthenticated, interfacesRouter);
 app.use('/exams', isAuthenticated, examsRouter);
 app.use('/orders', isAuthenticated, ordersRouter);
 app.use('/laborders', isAuthenticated, labOrdersRouter);
+app.use('/results', isAuthenticated, resultsRouter);
 
 
 app.use('/partners', isAuthenticated, isAdmin, partnersRouter);

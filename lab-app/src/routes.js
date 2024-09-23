@@ -16,6 +16,7 @@ import Orders from './private/Orders/Orders';
 import OrderForm from './private/Orders/OrderForm';
 
 import Dashboard from './private/Dashboard/Dashboard';
+import Results from './private/Results/Results';
 
 
 
@@ -145,6 +146,12 @@ function Router() {
                 <Route path="/settings" element={
                     <PrivateRoute>
                         <Settings />
+                    </PrivateRoute>
+                } />
+
+                <Route path="/results" element={
+                    <PrivateRoute>
+                        <Results />
                     </PrivateRoute>
                 } />
             </Routes>

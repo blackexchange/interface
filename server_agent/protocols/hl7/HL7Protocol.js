@@ -100,7 +100,7 @@ class HL7Protocol extends TCPBase {
             sampleType:  this.getField(message?.OBR?.[0],this.field.sampleType),  // Amostra
             results: testResults,
         };
-        const ackMessage = this.createACKResponse(message);
+        const ackMessage = this.createResultResponse();
         this.sendMessage(ackMessage);    
         // Inserção assíncrona de resultados
         await this.insertResult(data);
@@ -117,17 +117,18 @@ class HL7Protocol extends TCPBase {
         const orders = await this.getTestOrders(barCode);
 
         if (orders.length > 0){
-            const ack = this.createQCKResponse();
+            const ack = this.createQueryResponse(true);
             this.sendMessage(ack); 
 
-            const requestMsg = this.createDSRResponse(orders,message);
-            this.sendMessage(requestMsg); 
+          const requestMsg = this.createDSRResponse(orders,message);
+           this.sendMessage(requestMsg); 
+
             this.lastSentMessage = requestMsg;
             this.sendNextMessage();
 
         }else{
             
-            const response = this.createQCKResponse(true);
+            const response = this.createQueryResponse(true);
             this.sendMessage(response); 
             this.sendNextMessage();
 
@@ -140,13 +141,14 @@ class HL7Protocol extends TCPBase {
         
         // Extração direta dos campos de PID para evitar repetição
         const barCode = message?.QRD?.[0].field8 || {};
+        console.log("ACK Q03 Recebido")
         
-        const orders = await this.getTestOrders(barCode);
+        //const orders = await this.getTestOrders(barCode);
   
 
     }
     
-    
+    /*
 
     createACKResponse(message) {
         const MSH = {
@@ -191,7 +193,7 @@ class HL7Protocol extends TCPBase {
 
         return [MSH, MSA];
     }
-    
+    */
 
 
     processDSR_Q03(worklist, message) {
@@ -203,53 +205,65 @@ class HL7Protocol extends TCPBase {
 
     }
 
-    createACKResponse(message) {
-        let MSH = {
-            MSH:{
-                field0 : "MSH",
-                field1 : message.MSH[0].field1,
-                field2 : message.MSH[0].field3,
-                field3 : message.MSH[0].field2,
-                field4 : message.MSH[0].field5,
-                field5 : message.MSH[0].field4,
-                field6 : getCurrentTimestamp(),
-                field7 : message.MSH[0].field7,
-                field8 : "ACK^R01",
-                field9: message.MSH[0].field9,
-                field10: message.MSH[0].field10,
-                field11: message.MSH[0].field11,
-                field12: message.MSH[0].field12,
-                field13: message.MSH[0].field13,
-                field14: message.MSH[0].field14,
-                field15: message.MSH[0].field15,
-                field16: message.MSH[0].field16,
-                field17: message.MSH[0].field17,
-                field18: message.MSH[0].field18,
-                field19: message.MSH[0].field19,
-                field20: message.MSH[0].field20
-            }
-            
-        };            
+  
 
+    createQueryResponse(noexam = false) {
+          let MSH = {
+              MSH:{
+                  field0 : "MSH",
+                  field1 : this.lastMessageReceived.MSH[0].field1,
+                  field2 : this.lastMessageReceived.MSH[0].field3,
+                  field3 : this.lastMessageReceived.MSH[0].field2,
+                  field4 : this.lastMessageReceived.MSH[0].field5,
+                  field5 : this.lastMessageReceived.MSH[0].field4,
+                  field6 : getCurrentTimestamp(),
+                  field7 : this.lastMessageReceived.MSH[0].field7,
+                  field8 : "QCK^Q02",
+                  field9: this.lastMessageReceived.MSH[0].field9,
+                  field10: this.lastMessageReceived.MSH[0].field10,
+                  field11: this.lastMessageReceived.MSH[0].field11,
+                  field12: this.lastMessageReceived.MSH[0].field12,
+                  field13: this.lastMessageReceived.MSH[0].field13,
+                  field14: this.lastMessageReceived.MSH[0].field14,
+                  field15: this.lastMessageReceived.MSH[0].field15,
+                  field16: this.lastMessageReceived.MSH[0].field16,
+                  field17: this.lastMessageReceived.MSH[0].field17,
+                  field18: this.lastMessageReceived.MSH[0].field18,
+                  field19: this.lastMessageReceived.MSH[0].field19,
+                  field20: this.lastMessageReceived.MSH[0].field20
+              }
+              
+          };            
+  
+  
+          let MSA = { "MSA":{
+              field0:"MSA",
+              field1:"AA",
+              field2: this.lastMessageReceived.MSH[0].field9,
+              field3:"Query received",
+              field4:"",
+              field5:"",
+              field6:"0",
+              field7:""}
+          }
+          let ERR = { "ERR":{
+              field0:"ERR",
+              field1:"0"}
+          }
+  
+          let QAK = { "QAK":{
+              field0:"QAK",
+              field1:'SR',
+              field2: `${noexam ? "NF":"OK"}`,
+              field3:""}
+          }
+  
+          const ackMessage =[MSH,MSA,ERR,QAK];
+          return ackMessage;
+      }
+  
 
-        let MSA = { "MSA":{
-            field0:"MSA",
-            field1:"AA",
-            field2: message.MSH[0].field9,
-            field3:"SUCCESS",
-            field4:"",
-            field5:"",
-            field6:"0",
-            field7:""}
-        }
-
-        const ackMessage =[MSH,MSA];
-        
-        return ackMessage;
-    }
-
-    createQCKResponse(noexam = false) {
-        console.log(`${noexam ? "NF":"OK"}`)
+    createResultResponse() {
         let MSH = {
             MSH:{
                 field0 : "MSH",
@@ -260,7 +274,20 @@ class HL7Protocol extends TCPBase {
                 field5 : this.lastMessageReceived.MSH[0].field4,
                 field6 : getCurrentTimestamp(),
                 field7 : this.lastMessageReceived.MSH[0].field7,
-                field8 : "QCK^Q02"}
+                field8 : "ACK^R01",
+                field9: this.lastMessageReceived.MSH[0].field9,
+                field10: this.lastMessageReceived.MSH[0].field10,
+                field11: this.lastMessageReceived.MSH[0].field11,
+                field12: this.lastMessageReceived.MSH[0].field12,
+                field13: this.lastMessageReceived.MSH[0].field13,
+                field14: this.lastMessageReceived.MSH[0].field14,
+                field15: this.lastMessageReceived.MSH[0].field15,
+                field16: this.lastMessageReceived.MSH[0].field16,
+                field17: this.lastMessageReceived.MSH[0].field17,
+                field18: this.lastMessageReceived.MSH[0].field18,
+                field19: this.lastMessageReceived.MSH[0].field19,
+                field20: this.lastMessageReceived.MSH[0].field20
+            }
             
         };            
 
@@ -269,26 +296,15 @@ class HL7Protocol extends TCPBase {
             field0:"MSA",
             field1:"AA",
             field2: this.lastMessageReceived.MSH[0].field9,
-            field3:"SUCCESS",
+            field3:"Result received",
             field4:"",
             field5:"",
             field6:"0",
             field7:""}
         }
-        let ERR = { "ERR":{
-            field0:"ERR",
-            field1:"0"}
-        }
-
-        let QAK = { "QAK":{
-            field0:"QAK",
-            field1: `${noexam ? "NF":"OK"}`,
-            field2: "OK",
-            field3:""}
-        }
-
-        const ackMessage =[MSH,MSA,ERR,QAK];
         
+
+        const ackMessage =[MSH,MSA];
         return ackMessage;
     }
 
@@ -317,7 +333,20 @@ class HL7Protocol extends TCPBase {
                 field5 : message.MSH[0].field4,
                 field6 : getCurrentTimestamp(),
                 field7 : message.MSH[0].field7,
-                field8 : "DSR^Q03"}
+                field8 : "DSR^Q03",
+                field9: this.lastMessageReceived.MSH[0].field9,
+                field10: this.lastMessageReceived.MSH[0].field10,
+                field11: this.lastMessageReceived.MSH[0].field11,
+                field12: this.lastMessageReceived.MSH[0].field12,
+                field13: this.lastMessageReceived.MSH[0].field13,
+                field14: this.lastMessageReceived.MSH[0].field14,
+                field15: this.lastMessageReceived.MSH[0].field15,
+                field16: this.lastMessageReceived.MSH[0].field16,
+                field17: this.lastMessageReceived.MSH[0].field17,
+                field18: this.lastMessageReceived.MSH[0].field18,
+                field19: this.lastMessageReceived.MSH[0].field19,
+                field20: this.lastMessageReceived.MSH[0].field20
+            }
             
         };   
 

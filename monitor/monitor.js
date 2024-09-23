@@ -6,7 +6,6 @@ const { ObjectId } = require('mongodb');
 
 require('dotenv').config();
 const moment = require('moment');
-const { LabOrder } = require('./models/labOrderModel');
 moment.locale('pt-br');
 
 const userId = process.env.USER_MONITOR; 

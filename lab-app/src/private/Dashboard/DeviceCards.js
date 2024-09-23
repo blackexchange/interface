@@ -10,12 +10,15 @@ function DeviceCards({ devices }) {
             <div className="card border-0 shadow">
               <div className="card-body">
                 <div className="row d-block d-xl-flex align-items-center">
+      
+             
                   <div className="col-12 col-xl-5 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
-                    <div className="icon-shape icon-shape-primary rounded me-4 me-sm-0">
+                    <div className=  {device.isOnline ?"icon-shape icon-shape-success rounded me-4 me-sm-0":"icon-shape icon-shape-primary rounded me-4 me-sm-0"}>
+                      
                       {/* Icone do dispositivo */}
                       <svg
                         id="Capa_1"
-                        enableBackground="new 0 0 512.099 512.099"
+               
                         viewBox="0 0 512.099 512.099"
                         xmlns="http://www.w3.org/2000/svg"
                       >
@@ -73,7 +76,7 @@ function DeviceCards({ devices }) {
                     </div>
                     <p className="mb-1">
                       <span className="fw-bold">
-                        {device.ip}:{device.port} | {device.isOnLine}
+                        {device.ip}:{device.port}
                       </span>
                     </p>
                     <p className="text-muted small mb-0">{interfaceItem.name}</p>

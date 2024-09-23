@@ -3,7 +3,7 @@ const app = require('./app');
 const logger = require('./utils/logger');
 const appEm = require('./app-em');
 const appWs = require('./app-ws');
-const { monitorNewInterfaces } = require('./services/changeStreamWatcher');
+const { monitorNewInterfaces, monitorStatusDevices } = require('./services/changeStreamWatcher');
 
 
 (async () => {
@@ -20,6 +20,7 @@ const { monitorNewInterfaces } = require('./services/changeStreamWatcher');
 
     appEm.init(wss);
     monitorNewInterfaces();
+    monitorStatusDevices();
 
 
 

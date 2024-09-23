@@ -65,7 +65,7 @@ function SideBar() {
                             <ul className="flex-column nav">
                                 <SideBarItem to="/dashboard" text="Dashboard" />
                                 <SideBarItem to="/reports" text="Gestor de Interfaces" />
-                                <SideBarItem to="/wallet" text="Resultados" />
+                                <SideBarItem to="/results" text="Resultados" />
                                 <SideBarItem to="/wallet" text="Integrações" />
                                 <SideBarItem to="/wallet" text="Filas" />
                             </ul>

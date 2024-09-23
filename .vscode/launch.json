@@ -9,11 +9,14 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Server Management",
+            "name": "Server Agent",
+            "runtimeExecutable": "npm",   // Executa o npm
+            "runtimeArgs": ["start"],    // Passa o comando 'start' para npm
+            "cwd": "${workspaceFolder}/server_agent",  
+
             "skipFiles": [
                 "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}\\server_agent\\server.js"
+            ]
         },
 
         

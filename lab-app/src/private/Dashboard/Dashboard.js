@@ -8,6 +8,11 @@ import { getActiveDevices } from '../../services/InterfacesService';
 import useWebSocket from 'react-use-websocket';
 
 function Dashboard() {
+
+  const [devices, setDevices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ type: '', text: '' });
   const condition = [
     { $match: { 'devices.status': 'active' } },
     {
@@ -35,6 +40,7 @@ function Dashboard() {
               mode: '$$device.mode',
               protocol: '$$device.protocol',
               status: '$$device.status',
+              isOnline: '$$device.isOnline',
             },
           },
         },
@@ -82,13 +88,9 @@ function Dashboard() {
     },
     { $sort: { name: 1 } },
   ];
-
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [notification, setNotification] = useState({ type: '', text: '' });
-
   const fetchDevices = useCallback(async () => {
+
+  
     try {
       const result = await getActiveDevices(condition);
       setDevices(result);
