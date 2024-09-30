@@ -14,6 +14,10 @@ class TCPBase {
         this.socket = null;
         this.index = 0;
         this.field = device.fieldMappings;
+        this.pendingFrames = [];  // Armazena os frames a serem enviados
+        this.currentFrameIndex = 0;  // Índice do frame atual que está sendo enviado
+        this.awaitingAck = false;  // Indica se estamos aguardando um ACK antes de enviar o próximo frame
+  
 
         this.messageQueue = [];
     }
@@ -121,6 +125,10 @@ class TCPBase {
             console.log('Todas as mensagens foram enviadas.');
         }
     }
+
+    sendInitMessage(){
+        this.messageQueue.length
+    }
     
     startTCPServer() {
         this.server = net.createServer((socket) => {
@@ -130,9 +138,11 @@ class TCPBase {
             interfacRepository.setDeviceOnline(this.device._id,true);
 
             Logger.log(`Cliente conectado a partir de ${socket.remoteAddress}:${socket.remotePort}`, this.device);
-
+            this.sendInitMessage();
+            
             socket.on('data', (data) => {
                 interfacRepository.setDeviceOnline(this.device._id,true);
+             
 
                 Logger.logDB(data);
                 this.receiveMessage(data);
@@ -206,6 +216,15 @@ class TCPBase {
 
         await resultRepository.createOne(data);
 
+    }
+
+    calculateChecksum(message) {
+        // Função que calcula o checksum da mensagem ASTM
+        let checksum = 0;
+        for (let i = 0; i < message.length; i++) {
+            checksum += message.charCodeAt(i);
+        }
+        return (checksum % 256).toString(16).toUpperCase();
     }
 
     async getTestOrders(barCode){

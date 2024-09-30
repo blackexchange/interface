@@ -1,9 +1,9 @@
 // Importando os módulos dos protocolos
-//const astmProcessor = require('../protocols/ASTM/astmProcessor');
+const astmProcessor = require('../protocols/ASTM/ASTMProtocol');
 const hl7Processor = require('../protocols/HL7/HL7Protocol');
 
 const protocolProcessors = {
-   // 'ASTM': astmProcessor,
+    'ASTM': astmProcessor,
     'HL7': hl7Processor,
     // Adicione outros protocolos aqui
 };
